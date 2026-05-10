@@ -1,0 +1,34 @@
+[
+  {
+    "trend": "coquette aesthetic",
+    "momentum": 0.91,
+    "confidence": 0.88,
+    "hashtags": ["#coquette", "#bows", "#pinkfashion"],
+    "category": "tops",
+    "peak_prediction_days": 14
+  },
+  {
+    "trend": "gorpcore",
+    "momentum": 0.84,
+    "confidence": 0.81,
+    "hashtags": ["#gorpcore", "#utilitywear"],
+    "category": "jackets",
+    "peak_prediction_days": 21
+  },
+  {
+    "trend": "quiet luxury",
+    "momentum": 0.78,
+    "confidence": 0.90,
+    "hashtags": ["#quietluxury", "#minimalfashion"],
+    "category": "blazers",
+    "peak_prediction_days": 30
+  },
+  {
+    "trend": "cargo revival",
+    "momentum": 0.65,
+    "confidence": 0.72,
+    "hashtags": ["#cargopants", "#streetwear"],
+    "category": "pants",
+    "peak_prediction_days": 18
+  }
+]
