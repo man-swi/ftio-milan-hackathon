@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
-import time
+from io import StringIO
 
 # -----------------------------------
 # PAGE CONFIG
@@ -9,15 +9,57 @@ import time
 
 st.set_page_config(
     page_title="FTIO Dashboard",
-    page_icon="📈",
     layout="wide"
 )
 
 # -----------------------------------
-# API CONFIG
+# BACKEND URL
 # -----------------------------------
 
-API_BASE_URL = "http://127.0.0.1:8000"
+BACKEND_URL = "http://127.0.0.1:8000"
+
+# -----------------------------------
+# CUSTOM CSS
+# -----------------------------------
+
+st.markdown("""
+<style>
+
+.main {
+    background-color: #0E1117;
+    color: white;
+}
+
+.metric-card {
+    background-color: #1c1f26;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #2f3542;
+}
+
+.trend-card {
+    background-color: #172a45;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.alert-understock {
+    background-color: #4b5320;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.alert-overstock {
+    background-color: #4a2323;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # -----------------------------------
 # SIDEBAR
@@ -38,23 +80,18 @@ with st.sidebar:
 
     st.markdown("---")
 
-    st.caption(
-        "Built for Milan AI Week Hackathon"
-    )
+    st.caption("Built for Milan AI Week Hackathon")
 
 # -----------------------------------
 # HEADER
 # -----------------------------------
 
-st.title(
-    "Fashion Trend Intelligence Dashboard"
-)
+st.title("Fashion Trend Intelligence Dashboard")
 
-st.markdown(
-    """
-    AI-powered retail intelligence system for
-    fashion trend analysis and inventory optimization.
-    """
+st.write(
+    "AI-powered retail intelligence system "
+    "for fashion trend analysis and "
+    "inventory optimization."
 )
 
 st.markdown("---")
@@ -63,14 +100,12 @@ st.markdown("---")
 # CSV UPLOAD SECTION
 # -----------------------------------
 
-st.subheader("Upload Inventory CSV")
+st.header("Upload Inventory CSV")
 
 uploaded_file = st.file_uploader(
     "Upload inventory dataset",
     type=["csv"]
 )
-
-upload_success = False
 
 if uploaded_file is not None:
 
@@ -83,7 +118,7 @@ if uploaded_file is not None:
     }
 
     response = requests.post(
-        f"{API_BASE_URL}/upload",
+        f"{BACKEND_URL}/upload",
         files=files
     )
 
@@ -93,14 +128,14 @@ if uploaded_file is not None:
             f"{uploaded_file.name} uploaded successfully."
         )
 
-        upload_success = True
+        # Preview CSV
 
-        df = pd.read_csv(uploaded_file)
+        dataframe = pd.read_csv(uploaded_file)
 
         st.subheader("Inventory Preview")
 
         st.dataframe(
-            df,
+            dataframe,
             use_container_width=True
         )
 
@@ -114,195 +149,230 @@ st.markdown("---")
 # ANALYZE SECTION
 # -----------------------------------
 
-st.subheader("Run AI Analysis")
+st.header("Run AI Analysis")
 
-analyze_button = st.button(
-    "Analyze Trends"
-)
-
-# -----------------------------------
-# ANALYSIS PIPELINE
-# -----------------------------------
+analyze_button = st.button("Analyze Trends")
 
 if analyze_button:
 
-    if uploaded_file is None:
+    with st.spinner(
+        "Running AI multi-agent analysis..."
+    ):
 
-        st.warning(
-            "Please upload an inventory CSV first."
+        response = requests.post(
+            f"{BACKEND_URL}/analyze"
+        )
+
+    if response.status_code == 200:
+
+        data = response.json()
+
+        report = data["report"]
+
+        metrics = data["metrics"]
+
+        st.success(
+            "Analysis completed successfully."
+        )
+
+        # -----------------------------------
+        # BUSINESS METRICS
+        # -----------------------------------
+
+        st.markdown("---")
+
+        st.header("Business Metrics")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+
+            st.metric(
+                "Top Trend Momentum",
+                metrics["top_trend_momentum"]
+            )
+
+        with col2:
+
+            st.metric(
+                "Revenue Opportunity",
+                f"${metrics['total_revenue_opportunity']:,.0f}"
+            )
+
+        with col3:
+
+            st.metric(
+                "Inventory Risk",
+                f"${metrics['total_inventory_risk']:,.0f}"
+            )
+
+        # -----------------------------------
+        # TREND INSIGHTS
+        # -----------------------------------
+
+        st.markdown("---")
+
+        st.header("Trend Insights")
+
+        trend_columns = st.columns(2)
+
+        for index, trend in enumerate(
+            metrics["trend_insights"]
+        ):
+
+            with trend_columns[index % 2]:
+
+                st.markdown(
+                    f"""
+                    <div class="trend-card">
+
+                    <h4>{trend['trend'].title()}</h4>
+
+                    <p>
+                    <b>Momentum:</b>
+                    {trend['momentum']}
+                    </p>
+
+                    <p>
+                    <b>Confidence:</b>
+                    {int(trend['confidence'] * 100)}%
+                    </p>
+
+                    <p>
+                    <b>Peak Prediction:</b>
+                    {trend['peak_prediction_days']} days
+                    </p>
+
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+        # -----------------------------------
+        # INVENTORY ALERTS
+        # -----------------------------------
+
+        st.markdown("---")
+
+        st.header("Inventory Alerts")
+
+        for alert in metrics["inventory_alerts"]:
+
+            # UNDERSTOCK
+
+            if alert["type"] == "UNDERSTOCK":
+
+                st.markdown(
+                    f"""
+                    <div class="alert-understock">
+
+                    <h4>
+                    UNDERSTOCK ALERT
+                    </h4>
+
+                    <p>
+                    <b>Product:</b>
+                    {alert['product']}
+                    </p>
+
+                    <p>
+                    <b>Current Stock:</b>
+                    {alert['current_stock']}
+                    </p>
+
+                    <p>
+                    <b>Recommended Stock:</b>
+                    {alert['recommended_stock']}
+                    </p>
+
+                    <p>
+                    <b>Missing Units:</b>
+                    {alert['missing_units']}
+                    </p>
+
+                    <p>
+                    <b>Revenue Opportunity:</b>
+                    ${alert['revenue_opportunity']:,.0f}
+                    </p>
+
+                    <p>
+                    <b>Priority:</b>
+                    {alert['priority']}
+                    </p>
+
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            # OVERSTOCK
+
+            else:
+
+                st.markdown(
+                    f"""
+                    <div class="alert-overstock">
+
+                    <h4>
+                    OVERSTOCK ALERT
+                    </h4>
+
+                    <p>
+                    <b>Product:</b>
+                    {alert['product']}
+                    </p>
+
+                    <p>
+                    <b>Current Stock:</b>
+                    {alert['current_stock']}
+                    </p>
+
+                    <p>
+                    <b>Recommended Stock:</b>
+                    {alert['recommended_stock']}
+                    </p>
+
+                    <p>
+                    <b>Excess Units:</b>
+                    {alert['excess_units']}
+                    </p>
+
+                    <p>
+                    <b>Overstock Cost:</b>
+                    ${alert['overstock_cost']:,.0f}
+                    </p>
+
+                    <p>
+                    <b>Priority:</b>
+                    {alert['priority']}
+                    </p>
+
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+        # -----------------------------------
+        # EXECUTIVE REPORT
+        # -----------------------------------
+
+        st.markdown("---")
+
+        st.header("Executive Report")
+
+        st.markdown(report)
+
+        # -----------------------------------
+        # DOWNLOAD REPORT
+        # -----------------------------------
+
+        st.download_button(
+            label="Download Report",
+            data=report,
+            file_name="ftio_report.md",
+            mime="text/markdown"
         )
 
     else:
 
-        # -----------------------------------
-        # AGENT ACTIVITY FEED
-        # -----------------------------------
-
-        st.subheader("Agent Workflow")
-
-        activity_box = st.empty()
-
-        activity_box.info(
-            "Trend Agent analyzing fashion signals..."
-        )
-
-        time.sleep(1.5)
-
-        activity_box.info(
-            "Inventory Agent comparing inventory data..."
-        )
-
-        time.sleep(1.5)
-
-        activity_box.info(
-            "Report Agent generating executive insights..."
-        )
-
-        time.sleep(1.5)
-
-        # -----------------------------------
-        # RUN BACKEND ANALYSIS
-        # -----------------------------------
-
-        with st.spinner(
-            "Running multi-agent analysis..."
-        ):
-
-            response = requests.post(
-                f"{API_BASE_URL}/analyze"
-            )
-
-        # -----------------------------------
-        # HANDLE RESPONSE
-        # -----------------------------------
-
-        if response.status_code == 200:
-
-            result = response.json()
-
-            report_text = result["report"]
-
-            activity_box.success(
-                "Analysis completed successfully."
-            )
-
-            st.markdown("---")
-
-            # -----------------------------------
-            # METRICS
-            # -----------------------------------
-
-            st.subheader("Business Metrics")
-
-            col1, col2, col3 = st.columns(3)
-
-            with col1:
-                st.metric(
-                    "Top Trend Momentum",
-                    "0.91"
-                )
-
-            with col2:
-                st.metric(
-                    "Revenue Opportunity",
-                    "$10,750"
-                )
-
-            with col3:
-                st.metric(
-                    "Inventory Risk",
-                    "$11,200"
-                )
-
-            st.markdown("---")
-
-            # -----------------------------------
-            # TREND INSIGHTS
-            # -----------------------------------
-
-            st.subheader("Trend Insights")
-
-            trend_col1, trend_col2 = st.columns(2)
-
-            with trend_col1:
-
-                st.info(
-                    """
-                    Coquette Aesthetic
-
-                    Momentum: 0.91
-
-                    Peak Prediction: 14 days
-                    """
-                )
-
-            with trend_col2:
-
-                st.info(
-                    """
-                    Gorpcore
-
-                    Momentum: 0.84
-
-                    Peak Prediction: 21 days
-                    """
-                )
-
-            st.markdown("---")
-
-            # -----------------------------------
-            # INVENTORY ALERTS
-            # -----------------------------------
-
-            st.subheader("Inventory Alerts")
-
-            st.warning(
-                """
-                UNDERSTOCK ALERT
-
-                Pink Ribbon Top
-
-                Current Stock: 5
-
-                Recommended Restock: 50
-                """
-            )
-
-            st.error(
-                """
-                OVERSTOCK ALERT
-
-                Cargo Street Pants
-
-                Current Stock: 120
-
-                Consider markdown promotions.
-                """
-            )
-
-            st.markdown("---")
-
-            # -----------------------------------
-            # EXECUTIVE REPORT
-            # -----------------------------------
-
-            st.subheader("Executive Report")
-
-            st.markdown(report_text)
-
-            # -----------------------------------
-            # DOWNLOAD BUTTON
-            # -----------------------------------
-
-            st.download_button(
-                label="Download Report",
-                data=report_text,
-                file_name="ftio_report.md",
-                mime="text/markdown"
-            )
-
-        else:
-
-            st.error(
-                "Analysis failed."
-            )
+        st.error("Analysis failed.")
