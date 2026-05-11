@@ -1,5 +1,6 @@
 from crewai import Agent
-from agents.base import groq_llm
+# from agents.base import groq_llm
+from backend.agents.base import groq_llm
 
 report_agent = Agent(
     role="Executive Fashion Intelligence Reporter",

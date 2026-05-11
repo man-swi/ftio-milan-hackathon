@@ -1,97 +1,133 @@
+from backend.agents.trend_agent import trend_agent
+from backend.agents.inventory_agent import inventory_agent
+from backend.agents.report_agent import report_agent
+
+from backend.tools.load_trends import load_mock_trends
+from backend.tools.load_inventory import load_inventory
 from crewai import Crew, Task
 
-from agents.trend_agent import trend_agent
-from agents.inventory_agent import inventory_agent
-from agents.report_agent import report_agent
+# -----------------------------------
+# LOAD DATASETS
+# -----------------------------------
 
-from tools.load_trends import load_mock_trends
-from tools.load_inventory import load_inventory
-
-# Load datasets
 trend_data = load_mock_trends()
-inventory_data = load_inventory().to_dict(orient="records")
 
-# -----------------------------
-# TASK 1 — Trend Analysis
-# -----------------------------
+inventory_data = load_inventory().to_dict(
+    orient="records"
+)
+
+# -----------------------------------
+# TASK 1 — TREND ANALYSIS
+# -----------------------------------
 
 trend_task = Task(
     description=f"""
-    Analyze these fashion trends:
+    Analyze the following fashion trend dataset:
 
     {trend_data}
 
-    Identify:
-    - top trending aesthetics
-    - momentum insights
-    - strongest categories
-    - emerging opportunities
+    Your responsibilities:
+    - identify top trending aesthetics
+    - analyze momentum scores
+    - identify strongest fashion categories
+    - identify emerging opportunities
+    - summarize consumer behavior patterns
+
+    Focus on actionable business intelligence.
     """,
 
     expected_output="""
-    Structured fashion trend analysis with
-    trend rankings, momentum scores,
-    and category insights.
+    A structured fashion trend analysis report including:
+    - trend rankings
+    - strongest categories
+    - momentum insights
+    - emerging opportunities
+    - consumer behavior observations
     """,
 
     agent=trend_agent
 )
 
-# -----------------------------
-# TASK 2 — Inventory Matching
-# -----------------------------
+# -----------------------------------
+# TASK 2 — INVENTORY ANALYSIS
+# -----------------------------------
 
 inventory_task = Task(
     description=f"""
-    Compare these inventory records:
+    Analyze the inventory dataset below:
 
     {inventory_data}
 
-    Against these trends:
+    Compare inventory performance against
+    the previously analyzed fashion trends.
 
-    {trend_data}
+    Your responsibilities:
+    - identify understocked trending products
+    - identify overstocked weak products
+    - estimate revenue opportunities
+    - estimate inventory risks
+    - recommend inventory adjustments
 
-    Identify:
-    - understocked trending products
-    - overstocked weak products
-    - estimated revenue opportunities
-    - inventory risks
+    Focus on retail optimization and financial impact.
     """,
 
     expected_output="""
-    Inventory optimization report with
-    stock insights and financial impact.
+    A structured inventory optimization report including:
+    - understock risks
+    - overstock risks
+    - financial opportunities
+    - inventory recommendations
+    - estimated business impact
     """,
+
+    context=[trend_task],
 
     agent=inventory_agent
 )
 
-# -----------------------------
-# TASK 3 — Executive Report
-# -----------------------------
+# -----------------------------------
+# TASK 3 — EXECUTIVE REPORT
+# -----------------------------------
 
 report_task = Task(
     description="""
-    Generate a final executive report
-    combining trend analysis and inventory insights.
+    Generate a final executive-level fashion
+    intelligence report.
 
-    Include:
-    - executive summary
-    - top opportunities
+    Combine:
+    - trend analysis
+    - inventory optimization insights
+    - financial opportunities
     - inventory risks
-    - action recommendations
+    - business recommendations
+
+    The report should be concise,
+    professional, and business-focused.
+
+    Use markdown formatting.
     """,
 
     expected_output="""
-    Professional markdown business report.
+    A professional executive markdown report containing:
+    - executive summary
+    - top opportunities
+    - inventory risks
+    - recommended actions
+    - financial insights
+    - trend intelligence summary
     """,
+
+    context=[
+        trend_task,
+        inventory_task
+    ],
 
     agent=report_agent
 )
 
-# -----------------------------
-# CREW
-# -----------------------------
+# -----------------------------------
+# CREW ORCHESTRATION
+# -----------------------------------
 
 crew = Crew(
     agents=[
@@ -109,7 +145,20 @@ crew = Crew(
     verbose=True
 )
 
-result = crew.kickoff()
+# -----------------------------------
+# RUN ANALYSIS FUNCTION
+# -----------------------------------
 
-print("\nFINAL REPORT:\n")
-print(result)
+def run_ftio_analysis():
+
+    result = crew.kickoff()
+
+    with open(
+        "backend/reports/final_report.md",
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        file.write(str(result))
+
+    return str(result)

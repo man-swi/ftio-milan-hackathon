@@ -1,5 +1,6 @@
 from crewai import Agent
-from agents.base import groq_llm
+# from agents.base import groq_llm
+from backend.agents.base import groq_llm
 
 inventory_agent = Agent(
     role="Retail Inventory Optimization Specialist",
