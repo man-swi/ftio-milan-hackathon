@@ -82,7 +82,6 @@ def upload_inventory(
         "status": "uploaded",
         "filename": file.filename
     }
-
 # -----------------------------------
 # GET REPORT
 # -----------------------------------
