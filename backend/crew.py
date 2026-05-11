@@ -1,9 +1,12 @@
+from backend.services.business_metrics import calculate_business_metrics
+
 from backend.agents.trend_agent import trend_agent
 from backend.agents.inventory_agent import inventory_agent
 from backend.agents.report_agent import report_agent
 
 from backend.tools.load_trends import load_mock_trends
 from backend.tools.load_inventory import load_inventory
+
 from crewai import Crew, Task
 
 # -----------------------------------
@@ -12,8 +15,19 @@ from crewai import Crew, Task
 
 trend_data = load_mock_trends()
 
-inventory_data = load_inventory().to_dict(
+inventory_df = load_inventory()
+
+inventory_data = inventory_df.to_dict(
     orient="records"
+)
+
+# -----------------------------------
+# BUSINESS METRICS ENGINE
+# -----------------------------------
+
+business_metrics = calculate_business_metrics(
+    trend_data,
+    inventory_df
 )
 
 # -----------------------------------
@@ -153,12 +167,18 @@ def run_ftio_analysis():
 
     result = crew.kickoff()
 
+    final_report = str(result)
+
     with open(
         "backend/reports/final_report.md",
         "w",
         encoding="utf-8"
     ) as file:
 
-        file.write(str(result))
+        file.write(final_report)
 
-    return str(result)
+    return {
+        "status": "success",
+        "report": final_report,
+        "metrics": business_metrics
+    }
