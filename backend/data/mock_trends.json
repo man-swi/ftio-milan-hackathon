@@ -1,34 +1,59 @@
 [
   {
     "trend": "coquette aesthetic",
-    "momentum": 0.91,
-    "confidence": 0.88,
-    "hashtags": ["#coquette", "#bows", "#pinkfashion"],
+    "momentum": 0.97,
+    "confidence": 0.93,
+    "hashtags": [
+      "#coquette",
+      "#bows",
+      "#hyperfeminine"
+    ],
     "category": "tops",
-    "peak_prediction_days": 14
+    "peak_prediction_days": 10
   },
   {
     "trend": "gorpcore",
-    "momentum": 0.84,
-    "confidence": 0.81,
-    "hashtags": ["#gorpcore", "#utilitywear"],
+    "momentum": 0.71,
+    "confidence": 0.74,
+    "hashtags": [
+      "#gorpcore",
+      "#technicalwear"
+    ],
     "category": "jackets",
-    "peak_prediction_days": 21
+    "peak_prediction_days": 14
   },
   {
     "trend": "quiet luxury",
-    "momentum": 0.78,
-    "confidence": 0.90,
-    "hashtags": ["#quietluxury", "#minimalfashion"],
+    "momentum": 0.88,
+    "confidence": 0.94,
+    "hashtags": [
+      "#quietluxury",
+      "#oldmoney"
+    ],
     "category": "blazers",
-    "peak_prediction_days": 30
+    "peak_prediction_days": 45
   },
   {
     "trend": "cargo revival",
-    "momentum": 0.65,
-    "confidence": 0.72,
-    "hashtags": ["#cargopants", "#streetwear"],
+    "momentum": 0.49,
+    "confidence": 0.58,
+    "hashtags": [
+      "#streetwear",
+      "#cargo"
+    ],
     "category": "pants",
-    "peak_prediction_days": 18
+    "peak_prediction_days": 8
+  },
+  {
+    "trend": "mob wife aesthetic",
+    "momentum": 0.92,
+    "confidence": 0.87,
+    "hashtags": [
+      "#mobwife",
+      "#fauxfur",
+      "#maximalism"
+    ],
+    "category": "jackets",
+    "peak_prediction_days": 16
   }
 ]

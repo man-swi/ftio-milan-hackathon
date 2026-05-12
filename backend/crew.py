@@ -4,16 +4,20 @@ from backend.services.business_metrics import (
     calculate_business_metrics
 )
 
+from backend.services.memory_engine import (
+    persist_analysis_memory
+)
+
+from backend.services.temporal_analysis import (
+    calculate_momentum_acceleration
+)
+
 from backend.agents.trend_agent import (
     trend_agent
 )
 
 from backend.agents.inventory_agent import (
     inventory_agent
-)
-
-from backend.agents.report_agent import (
-    report_agent
 )
 
 from backend.agents.strategy_agent import (
@@ -56,33 +60,74 @@ business_metrics = (
 )
 
 # -----------------------------------
+# TEMPORAL INTELLIGENCE
+# -----------------------------------
+
+temporal_insights = []
+
+for trend in trend_data:
+
+    temporal_result = (
+        calculate_momentum_acceleration(
+
+            trend["trend"],
+            trend["momentum"]
+
+        )
+    )
+
+    temporal_insights.append({
+
+        "trend": trend["trend"],
+
+        "previous_momentum":
+        temporal_result[
+            "previous_momentum"
+        ],
+
+        "current_momentum":
+        temporal_result[
+            "current_momentum"
+        ],
+
+        "momentum_change":
+        temporal_result[
+            "momentum_change"
+        ],
+
+        "acceleration_label":
+        temporal_result[
+            "acceleration_label"
+        ]
+    })
+
+# -----------------------------------
 # TREND TASK
 # -----------------------------------
 
 trend_task = Task(
 
     description=f"""
-    Analyze the following fashion trend dataset:
-
-    {trend_data}
+    Analyze current fashion trend data.
 
     Focus on:
-    - momentum acceleration
-    - trend confidence
-    - consumer behavior shifts
-    - high-growth categories
-    - seasonal demand signals
+    - strongest momentum
+    - trend acceleration
+    - demand shifts
+    - category opportunities
 
-    Generate enterprise-grade trend intelligence.
+    Current trends:
+    {trend_data}
+
+    Temporal insights:
+    {temporal_insights}
     """,
 
     expected_output="""
-    Detailed trend intelligence report including:
-    - trend rankings
-    - category analysis
-    - acceleration insights
-    - demand forecasting
-    - consumer behavior patterns
+    Return concise trend intelligence.
+
+    Maximum 5 bullets.
+    Maximum 120 words.
     """,
 
     agent=trend_agent
@@ -95,24 +140,17 @@ trend_task = Task(
 inventory_task = Task(
 
     description=f"""
-    Analyze the inventory dataset below:
+    Analyze inventory risks and opportunities.
 
+    Inventory data:
     {inventory_data}
-
-    Compare inventory performance against
-    trend momentum and confidence levels.
-
-    Focus on:
-    - understock risks
-    - overstock exposure
-    - inventory imbalance
-    - revenue opportunities
-    - operational inefficiencies
     """,
 
     expected_output="""
-    Enterprise inventory optimization report
-    with financial and operational insights.
+    Return concise inventory insights.
+
+    Maximum 5 bullets.
+    Maximum 120 words.
     """,
 
     context=[trend_task],
@@ -127,27 +165,20 @@ inventory_task = Task(
 strategy_task = Task(
 
     description="""
-    Generate advanced retail growth strategies.
+    Generate concise retail strategies.
 
     Focus on:
-    - merchandising optimization
-    - bundling opportunities
-    - campaign strategies
-    - pricing recommendations
-    - inventory reallocation
-    - category prioritization
-
-    Use simulation insights and
-    business forecasting logic.
+    - pricing
+    - merchandising
+    - inventory allocation
+    - growth opportunities
     """,
 
     expected_output="""
-    Strategic retail action plan including:
-    - campaign ideas
-    - merchandising strategy
-    - pricing strategy
-    - inventory allocation strategy
-    - expected business impact
+    Return concise retail actions.
+
+    Maximum 5 bullets.
+    Maximum 150 words.
     """,
 
     context=[
@@ -165,22 +196,15 @@ strategy_task = Task(
 reflection_task = Task(
 
     description="""
-    Critically evaluate all previous
-    recommendations and identify:
-
-    - uncertainty
-    - forecasting risks
-    - low-confidence trends
-    - operational weaknesses
-    - unstable assumptions
-
-    Challenge weak recommendations.
+    Critique recommendations and
+    identify operational risks.
     """,
 
     expected_output="""
-    Risk analysis and reflection report
-    highlighting uncertainty, volatility,
-    and recommendation risks.
+    Return concise risk analysis.
+
+    Maximum 5 bullets.
+    Maximum 120 words.
     """,
 
     context=[
@@ -193,50 +217,6 @@ reflection_task = Task(
 )
 
 # -----------------------------------
-# REPORT TASK
-# -----------------------------------
-
-report_task = Task(
-
-    description="""
-    Generate a final executive-level
-    retail decision intelligence report.
-
-    Combine:
-    - trend intelligence
-    - inventory optimization
-    - forecasting simulations
-    - strategic recommendations
-    - reflection warnings
-    - financial opportunities
-    - operational risks
-
-    Use professional markdown formatting.
-    """,
-
-    expected_output="""
-    Executive retail intelligence report containing:
-    - executive summary
-    - trend intelligence
-    - inventory analysis
-    - business simulations
-    - strategic recommendations
-    - risk analysis
-    - reflection insights
-    - financial forecasts
-    """,
-
-    context=[
-        trend_task,
-        inventory_task,
-        strategy_task,
-        reflection_task
-    ],
-
-    agent=report_agent
-)
-
-# -----------------------------------
 # CREW
 # -----------------------------------
 
@@ -246,19 +226,17 @@ crew = Crew(
         trend_agent,
         inventory_agent,
         strategy_agent,
-        reflection_agent,
-        report_agent
+        reflection_agent
     ],
 
     tasks=[
         trend_task,
         inventory_task,
         strategy_task,
-        reflection_task,
-        report_task
+        reflection_task
     ],
 
-    verbose=True
+    verbose=False
 )
 
 # -----------------------------------
@@ -269,7 +247,100 @@ def run_ftio_analysis():
 
     result = crew.kickoff()
 
-    final_report = str(result)
+    strategy_output = str(
+        strategy_task.output
+    )
+
+    reflection_output = str(
+        reflection_task.output
+    )
+
+    metrics = business_metrics
+
+    # -----------------------------------
+    # SAVE MEMORY
+    # -----------------------------------
+
+    persist_analysis_memory(
+
+        trend_data,
+        metrics,
+        strategy_output,
+        reflection_output
+    )
+
+    # -----------------------------------
+    # REPORT
+    # -----------------------------------
+
+    final_report = f"""
+# FTIO Executive Intelligence Report
+
+---
+
+## Executive Summary
+
+FTIO detected evolving fashion trends
+using temporal intelligence and
+historical momentum tracking.
+
+The system identified acceleration
+signals, inventory risks,
+and revenue opportunities.
+
+---
+
+## Business Metrics
+
+- Revenue Opportunity:
+${metrics['total_revenue_opportunity']}
+
+- Inventory Risk:
+${metrics['total_inventory_risk']}
+
+- Average Confidence:
+{metrics['average_confidence']}
+
+---
+
+## Temporal Intelligence
+
+"""
+
+    for insight in temporal_insights:
+
+        final_report += f"""
+### {insight['trend'].title()}
+
+- Previous Momentum:
+{insight['previous_momentum']}
+
+- Current Momentum:
+{insight['current_momentum']}
+
+- Momentum Change:
+{insight['momentum_change']}%
+
+- Trend Status:
+{insight['acceleration_label']}
+"""
+
+    final_report += f"""
+
+---
+
+## Strategy Recommendations
+
+{strategy_output}
+
+---
+
+## Risk Reflection
+
+{reflection_output}
+
+---
+"""
 
     with open(
         "backend/reports/final_report.md",
@@ -285,5 +356,8 @@ def run_ftio_analysis():
 
         "report": final_report,
 
-        "metrics": business_metrics
+        "metrics": metrics,
+
+        "temporal_insights":
+        temporal_insights
     }

@@ -1,6 +1,8 @@
 sku,product_name,category,stock,sales_velocity,unit_price
-SKU101,Pink Ribbon Top,tops,5,high,35
-SKU102,Utility Shell Jacket,jackets,42,medium,120
-SKU103,Minimal Luxe Blazer,blazers,8,medium,180
-SKU104,Cargo Street Pants,pants,120,low,60
-SKU105,Classic White Tee,tops,200,low,20
+SKU101,Pink Ribbon Top,tops,3,high,35
+SKU102,Utility Shell Jacket,jackets,28,medium,120
+SKU103,Minimal Luxe Blazer,blazers,5,high,180
+SKU104,Cargo Street Pants,pants,190,low,60
+SKU105,Classic White Tee,tops,240,low,20
+SKU106,Faux Fur Statement Coat,jackets,12,high,250
+SKU107,Old Money Knit Polo,blazers,18,medium,95

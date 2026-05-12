@@ -19,5 +19,5 @@ inventory_agent = Agent(
 
     llm=groq_llm,
 
-    verbose=True
+    verbose=False
 )

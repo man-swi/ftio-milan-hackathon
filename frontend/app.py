@@ -432,6 +432,52 @@ if analyze_button:
             )
 
         # -----------------------------------
+        # TEMPORAL INTELLIGENCE
+        # -----------------------------------
+
+        st.markdown("---")
+
+        st.header("Temporal Intelligence")
+
+        temporal_insights = data.get(
+            "temporal_insights",
+            []
+        )
+
+        for insight in temporal_insights:
+
+            st.markdown(
+                f"""
+                <div class="trend-card">
+
+                <h4>{insight['trend'].title()}</h4>
+
+                <p>
+                <b>Previous Momentum:</b>
+                {insight['previous_momentum']}
+                </p>
+
+                <p>
+                <b>Current Momentum:</b>
+                {insight['current_momentum']}
+                </p>
+
+                <p>
+                <b>Momentum Change:</b>
+                {insight['momentum_change']}%
+                </p>
+
+                <p>
+                <b>Trend Status:</b>
+                {insight['acceleration_label']}
+                </p>
+
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        # -----------------------------------
         # EXECUTIVE REPORT
         # -----------------------------------
 
