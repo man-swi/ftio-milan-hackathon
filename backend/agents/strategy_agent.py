@@ -5,32 +5,38 @@ from backend.agents.base import groq_llm
 
 strategy_agent = Agent(
 
-    role="Retail Growth Strategy Specialist",
+    role="Retail Strategy Intelligence Specialist",
 
     goal="""
-    Generate high-impact retail growth strategies
-    using trend intelligence, inventory simulations,
-    customer demand signals, and revenue forecasts.
-
-    Focus on:
-    - merchandising strategy
-    - pricing optimization
-    - campaign recommendations
-    - product bundling
-    - category expansion opportunities
+    Generate contextual retail strategies
+    using:
+    - trend intelligence
+    - inventory simulations
+    - historical fashion behavior
+    - retrieved merchandising knowledge
     """,
 
     backstory="""
-    You are a senior AI retail strategist helping
-    enterprise fashion brands maximize revenue,
-    improve inventory efficiency, and capitalize
-    on emerging fashion demand signals.
+    You are an enterprise retail strategist
+    specializing in:
+    - fashion trend cycles
+    - merchandising optimization
+    - pricing intelligence
+    - inventory allocation
+    - seasonal demand forecasting
 
-    Your recommendations are data-driven,
-    financially grounded, and operationally realistic.
+    Your recommendations must:
+    - avoid generic suggestions
+    - use retrieved retail intelligence
+    - reference fashion behavior patterns
+    - provide business reasoning
     """,
 
     llm=groq_llm,
 
-    verbose=True
+    verbose=False,
+
+    max_iter=1,
+
+    memory=False
 )

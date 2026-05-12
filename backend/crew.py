@@ -12,6 +12,10 @@ from backend.services.temporal_analysis import (
     calculate_momentum_acceleration
 )
 
+from backend.services.rag_engine import (
+    retrieve_context
+)
+
 from backend.agents.trend_agent import (
     trend_agent
 )
@@ -51,6 +55,14 @@ inventory_data = inventory_df.to_dict(
 # -----------------------------------
 # BUSINESS METRICS
 # -----------------------------------
+
+# -----------------------------------
+# RETRIEVED KNOWLEDGE
+# -----------------------------------
+
+retrieved_knowledge = retrieve_context(
+    "fashion inventory optimization, trend forecasting, merchandising strategy"
+)
 
 business_metrics = (
     calculate_business_metrics(
@@ -164,15 +176,25 @@ inventory_task = Task(
 
 strategy_task = Task(
 
-    description="""
-    Generate concise retail strategies.
+    description=f"""
+Generate contextual retail strategies.
 
-    Focus on:
-    - pricing
-    - merchandising
-    - inventory allocation
-    - growth opportunities
-    """,
+Retrieved Retail Intelligence:
+{retrieved_knowledge}
+
+Focus on:
+- merchandising optimization
+- inventory allocation
+- pricing strategy
+- trend acceleration
+- seasonal demand behavior
+
+IMPORTANT:
+- Use retrieved retail intelligence
+- Reference historical fashion behavior
+- Avoid generic recommendations
+- Explain business reasoning
+""",
 
     expected_output="""
     Return concise retail actions.
@@ -195,10 +217,25 @@ strategy_task = Task(
 
 reflection_task = Task(
 
-    description="""
-    Critique recommendations and
-    identify operational risks.
-    """,
+    description=f"""
+Critically analyze operational risks.
+
+Retrieved Retail Intelligence:
+{retrieved_knowledge}
+
+Focus on:
+- trend instability
+- inventory volatility
+- overstock exposure
+- merchandising weakness
+- seasonal saturation risk
+
+IMPORTANT:
+- Use retrieved retail intelligence
+- Reference fashion behavior patterns
+- Explain risk drivers
+- Avoid generic warnings
+""",
 
     expected_output="""
     Return concise risk analysis.
