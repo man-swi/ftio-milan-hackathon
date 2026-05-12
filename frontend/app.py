@@ -109,39 +109,76 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
 
-    files = {
-        "file": (
-            uploaded_file.name,
-            uploaded_file.getvalue(),
-            "text/csv"
-        )
-    }
-
-    response = requests.post(
-        f"{BACKEND_URL}/upload",
-        files=files
+    st.success(
+        f"{uploaded_file.name} selected."
     )
 
-    if response.status_code == 200:
+    # -----------------------------------
+    # UPLOAD BUTTON
+    # -----------------------------------
 
-        st.success(
-            f"{uploaded_file.name} uploaded successfully."
-        )
+    upload_button = st.button(
+        "Upload Inventory CSV"
+    )
 
-        # Preview CSV
+    if upload_button:
 
-        dataframe = pd.read_csv(uploaded_file)
+        files = {
 
-        st.subheader("Inventory Preview")
+            "file": (
 
-        st.dataframe(
-            dataframe,
-            use_container_width=True
-        )
+                uploaded_file.name,
 
-    else:
+                uploaded_file.getvalue(),
 
-        st.error("Upload failed.")
+                "text/csv"
+            )
+        }
+
+        try:
+
+            response = requests.post(
+                f"{BACKEND_URL}/upload",
+                files=files
+            )
+
+            if response.status_code == 200:
+
+                st.success(
+                    f"{uploaded_file.name} uploaded successfully."
+                )
+
+                # -----------------------------------
+                # PREVIEW CSV
+                # -----------------------------------
+
+                dataframe = pd.read_csv(
+                    StringIO(
+                        uploaded_file.getvalue()
+                        .decode("utf-8")
+                    )
+                )
+
+                st.subheader(
+                    "Inventory Preview"
+                )
+
+                st.dataframe(
+                    dataframe,
+                    use_container_width=True
+                )
+
+            else:
+
+                st.error(
+                    "Upload failed."
+                )
+
+        except Exception as e:
+
+            st.error(
+                f"Backend connection error:\n{e}"
+            )
 
 st.markdown("---")
 

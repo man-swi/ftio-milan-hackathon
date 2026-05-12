@@ -9,65 +9,80 @@ from backend.services.knowledge_loader import (
     load_knowledge_documents
 )
 
-
 # -----------------------------------
-# LOAD EMBEDDING MODEL
-# -----------------------------------
-
-embedding_model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
-)
-
-# -----------------------------------
-# LOAD KNOWLEDGE DOCS
+# GLOBAL CACHE
 # -----------------------------------
 
-documents = load_knowledge_documents()
+embedding_model = None
 
-document_texts = [
+documents = None
 
-    doc["content"]
+index = None
 
-    for doc in documents
-]
 
 # -----------------------------------
-# CREATE EMBEDDINGS
+# INITIALIZE RAG
 # -----------------------------------
 
-embeddings = embedding_model.encode(
-    document_texts
-)
+def initialize_rag():
 
-embedding_matrix = np.array(
-    embeddings
-).astype("float32")
+    global embedding_model
+    global documents
+    global index
+
+    # Prevent reloading repeatedly
+    if index is not None:
+
+        return
+
+    print("Initializing FTIO RAG Engine...")
+
+    embedding_model = SentenceTransformer(
+        "all-MiniLM-L6-v2"
+    )
+
+    documents = load_knowledge_documents()
+
+    document_texts = [
+
+        doc["content"]
+
+        for doc in documents
+    ]
+
+    embeddings = embedding_model.encode(
+        document_texts
+    )
+
+    embedding_matrix = np.array(
+        embeddings
+    ).astype("float32")
+
+    dimension = embedding_matrix.shape[1]
+
+    index = faiss.IndexFlatL2(
+        dimension
+    )
+
+    index.add(embedding_matrix)
+
+    print(
+        f"FTIO RAG loaded "
+        f"{len(documents)} documents."
+    )
+
 
 # -----------------------------------
-# BUILD FAISS INDEX
-# -----------------------------------
-
-dimension = embedding_matrix.shape[1]
-
-index = faiss.IndexFlatL2(
-    dimension
-)
-
-index.add(embedding_matrix)
-
-print(
-    f"FTIO RAG loaded "
-    f"{len(documents)} documents."
-)
-
-# -----------------------------------
-# RETRIEVAL FUNCTION
+# RETRIEVE CONTEXT
 # -----------------------------------
 
 def retrieve_context(
     query,
     top_k=2
 ):
+
+    # Lazy initialize
+    initialize_rag()
 
     query_embedding = (
         embedding_model.encode([query])

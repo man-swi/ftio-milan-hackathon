@@ -6,6 +6,10 @@ import shutil
 
 from backend.crew import run_ftio_analysis
 
+from backend.services.copilot_engine import (
+    generate_copilot_response
+)
+
 app = FastAPI(
     title="FTIO API",
     description="Fashion Trend & Inventory Optimizer",
@@ -47,15 +51,45 @@ def health():
     }
 
 # -----------------------------------
+# COPILOT CHAT ENDPOINT
+# -----------------------------------
+
+@app.post("/chat")
+
+async def chat_with_ftio(
+    payload: dict
+):
+
+    user_message = payload.get(
+        "message",
+        ""
+    )
+
+    if not user_message:
+
+        return {
+
+            "response":
+            "No message provided."
+        }
+
+    response = generate_copilot_response(
+        user_message
+    )
+
+    return {
+
+        "response": response
+    }
+
+# -----------------------------------
 # ANALYZE
 # -----------------------------------
 
 @app.post("/analyze")
 def analyze():
 
-    result = run_ftio_analysis()
-
-    return result
+    return run_ftio_analysis()
 
 # -----------------------------------
 # CSV UPLOAD
@@ -79,6 +113,7 @@ def upload_inventory(
         "status": "uploaded",
         "filename": file.filename
     }
+
 # -----------------------------------
 # GET REPORT
 # -----------------------------------

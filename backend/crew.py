@@ -41,142 +41,148 @@ from backend.tools.load_inventory import (
 )
 
 # -----------------------------------
-# LOAD DATA
+# RUN FUNCTION
 # -----------------------------------
 
-trend_data = load_mock_trends()
+def run_ftio_analysis():
 
-inventory_df = load_inventory()
+    # -----------------------------------
+    # RETRIEVE DOMAIN KNOWLEDGE
+    # -----------------------------------
 
-inventory_data = inventory_df.to_dict(
-    orient="records"
-)
-
-# -----------------------------------
-# BUSINESS METRICS
-# -----------------------------------
-
-# -----------------------------------
-# RETRIEVED KNOWLEDGE
-# -----------------------------------
-
-retrieved_knowledge = retrieve_context(
-    "fashion inventory optimization, trend forecasting, merchandising strategy"
-)
-
-business_metrics = (
-    calculate_business_metrics(
-        trend_data,
-        inventory_df
+    retrieved_knowledge = retrieve_context(
+        "fashion inventory optimization, trend forecasting, merchandising strategy"
     )
-)
 
-# -----------------------------------
-# TEMPORAL INTELLIGENCE
-# -----------------------------------
+    # -----------------------------------
+    # LOAD DATA
+    # -----------------------------------
 
-temporal_insights = []
+    trend_data = load_mock_trends()
 
-for trend in trend_data:
+    inventory_df = load_inventory()
 
-    temporal_result = (
-        calculate_momentum_acceleration(
+    inventory_data = inventory_df.to_dict(
+        orient="records"
+    )
 
-            trend["trend"],
-            trend["momentum"]
+    # -----------------------------------
+    # BUSINESS METRICS
+    # -----------------------------------
 
+    business_metrics = (
+        calculate_business_metrics(
+            trend_data,
+            inventory_df
         )
     )
 
-    temporal_insights.append({
+    # -----------------------------------
+    # TEMPORAL INTELLIGENCE
+    # -----------------------------------
 
-        "trend": trend["trend"],
+    temporal_insights = []
 
-        "previous_momentum":
-        temporal_result[
-            "previous_momentum"
-        ],
+    for trend in trend_data:
 
-        "current_momentum":
-        temporal_result[
-            "current_momentum"
-        ],
+        temporal_result = (
+            calculate_momentum_acceleration(
 
-        "momentum_change":
-        temporal_result[
-            "momentum_change"
-        ],
+                trend["trend"],
+                trend["momentum"]
 
-        "acceleration_label":
-        temporal_result[
-            "acceleration_label"
-        ]
-    })
+            )
+        )
 
-# -----------------------------------
-# TREND TASK
-# -----------------------------------
+        temporal_insights.append({
 
-trend_task = Task(
+            "trend": trend["trend"],
 
-    description=f"""
-    Analyze current fashion trend data.
+            "previous_momentum":
+            temporal_result[
+                "previous_momentum"
+            ],
 
-    Focus on:
-    - strongest momentum
-    - trend acceleration
-    - demand shifts
-    - category opportunities
+            "current_momentum":
+            temporal_result[
+                "current_momentum"
+            ],
 
-    Current trends:
-    {trend_data}
+            "momentum_change":
+            temporal_result[
+                "momentum_change"
+            ],
 
-    Temporal insights:
-    {temporal_insights}
-    """,
+            "acceleration_label":
+            temporal_result[
+                "acceleration_label"
+            ]
+        })
 
-    expected_output="""
-    Return concise trend intelligence.
+    # -----------------------------------
+    # TREND TASK
+    # -----------------------------------
 
-    Maximum 5 bullets.
-    Maximum 120 words.
-    """,
+    trend_task = Task(
 
-    agent=trend_agent
-)
+        description=f"""
+        Analyze current fashion trend data.
 
-# -----------------------------------
-# INVENTORY TASK
-# -----------------------------------
+        Focus on:
+        - strongest momentum
+        - trend acceleration
+        - demand shifts
+        - category opportunities
 
-inventory_task = Task(
+        Current trends:
+        {trend_data}
 
-    description=f"""
-    Analyze inventory risks and opportunities.
+        Temporal insights:
+        {temporal_insights}
+        """,
 
-    Inventory data:
-    {inventory_data}
-    """,
+        expected_output="""
+        Return concise trend intelligence.
 
-    expected_output="""
-    Return concise inventory insights.
+        Maximum 5 bullets.
+        Maximum 120 words.
+        """,
 
-    Maximum 5 bullets.
-    Maximum 120 words.
-    """,
+        agent=trend_agent
+    )
 
-    context=[trend_task],
+    # -----------------------------------
+    # INVENTORY TASK
+    # -----------------------------------
 
-    agent=inventory_agent
-)
+    inventory_task = Task(
 
-# -----------------------------------
-# STRATEGY TASK
-# -----------------------------------
+        description=f"""
+        Analyze inventory risks and opportunities.
 
-strategy_task = Task(
+        Inventory data:
+        {inventory_data}
+        """,
 
-    description=f"""
+        expected_output="""
+        Return concise inventory insights.
+
+        Maximum 5 bullets.
+        Maximum 120 words.
+        """,
+
+        context=[trend_task],
+
+        agent=inventory_agent
+    )
+
+    # -----------------------------------
+    # STRATEGY TASK
+    # -----------------------------------
+
+    strategy_task = Task(
+
+        description=f"""
 Generate contextual retail strategies.
 
 Retrieved Retail Intelligence:
@@ -196,28 +202,28 @@ IMPORTANT:
 - Explain business reasoning
 """,
 
-    expected_output="""
-    Return concise retail actions.
+        expected_output="""
+        Return concise retail actions.
 
-    Maximum 5 bullets.
-    Maximum 150 words.
-    """,
+        Maximum 5 bullets.
+        Maximum 150 words.
+        """,
 
-    context=[
-        trend_task,
-        inventory_task
-    ],
+        context=[
+            trend_task,
+            inventory_task
+        ],
 
-    agent=strategy_agent
-)
+        agent=strategy_agent
+    )
 
-# -----------------------------------
-# REFLECTION TASK
-# -----------------------------------
+    # -----------------------------------
+    # REFLECTION TASK
+    # -----------------------------------
 
-reflection_task = Task(
+    reflection_task = Task(
 
-    description=f"""
+        description=f"""
 Critically analyze operational risks.
 
 Retrieved Retail Intelligence:
@@ -237,50 +243,44 @@ IMPORTANT:
 - Avoid generic warnings
 """,
 
-    expected_output="""
-    Return concise risk analysis.
+        expected_output="""
+        Return concise risk analysis.
 
-    Maximum 5 bullets.
-    Maximum 120 words.
-    """,
+        Maximum 5 bullets.
+        Maximum 120 words.
+        """,
 
-    context=[
-        trend_task,
-        inventory_task,
-        strategy_task
-    ],
+        context=[
+            trend_task,
+            inventory_task,
+            strategy_task
+        ],
 
-    agent=reflection_agent
-)
+        agent=reflection_agent
+    )
 
-# -----------------------------------
-# CREW
-# -----------------------------------
+    # -----------------------------------
+    # CREW
+    # -----------------------------------
 
-crew = Crew(
+    crew = Crew(
 
-    agents=[
-        trend_agent,
-        inventory_agent,
-        strategy_agent,
-        reflection_agent
-    ],
+        agents=[
+            trend_agent,
+            inventory_agent,
+            strategy_agent,
+            reflection_agent
+        ],
 
-    tasks=[
-        trend_task,
-        inventory_task,
-        strategy_task,
-        reflection_task
-    ],
+        tasks=[
+            trend_task,
+            inventory_task,
+            strategy_task,
+            reflection_task
+        ],
 
-    verbose=False
-)
-
-# -----------------------------------
-# RUN FUNCTION
-# -----------------------------------
-
-def run_ftio_analysis():
+        verbose=False
+    )
 
     result = crew.kickoff()
 
