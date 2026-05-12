@@ -55,10 +55,7 @@ def analyze():
 
     result = run_ftio_analysis()
 
-    return {
-        "status": "success",
-        "report": result
-    }
+    return result
 
 # -----------------------------------
 # CSV UPLOAD
