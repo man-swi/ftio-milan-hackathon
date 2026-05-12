@@ -1,6 +1,10 @@
 import sqlite3
 
-DB_PATH = "backend/data/ftio.db"
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+DB_PATH = BASE_DIR / "data" / "ftio.db"
 
 
 # -----------------------------------
