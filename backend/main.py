@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from fastapi import UploadFile, File
 
 import shutil
@@ -29,6 +30,13 @@ app.add_middleware(
 )
 
 # -----------------------------------
+# REQUEST MODEL
+# -----------------------------------
+
+class ChatRequest(BaseModel):
+    message: str
+
+# -----------------------------------
 # ROOT
 # -----------------------------------
 
@@ -55,30 +63,15 @@ def health():
 # -----------------------------------
 
 @app.post("/chat")
-
 async def chat_with_ftio(
-    payload: dict
+    request: ChatRequest
 ):
 
-    user_message = payload.get(
-        "message",
-        ""
-    )
-
-    if not user_message:
-
-        return {
-
-            "response":
-            "No message provided."
-        }
-
     response = generate_copilot_response(
-        user_message
+        request.message
     )
 
     return {
-
         "response": response
     }
 
