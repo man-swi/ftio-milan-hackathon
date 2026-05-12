@@ -1,16 +1,39 @@
-from backend.services.business_metrics import calculate_business_metrics
-
-from backend.agents.trend_agent import trend_agent
-from backend.agents.inventory_agent import inventory_agent
-from backend.agents.report_agent import report_agent
-
-from backend.tools.load_trends import load_mock_trends
-from backend.tools.load_inventory import load_inventory
-
 from crewai import Crew, Task
 
+from backend.services.business_metrics import (
+    calculate_business_metrics
+)
+
+from backend.agents.trend_agent import (
+    trend_agent
+)
+
+from backend.agents.inventory_agent import (
+    inventory_agent
+)
+
+from backend.agents.report_agent import (
+    report_agent
+)
+
+from backend.agents.strategy_agent import (
+    strategy_agent
+)
+
+from backend.agents.reflection_agent import (
+    reflection_agent
+)
+
+from backend.tools.load_trends import (
+    load_mock_trends
+)
+
+from backend.tools.load_inventory import (
+    load_inventory
+)
+
 # -----------------------------------
-# LOAD DATASETS
+# LOAD DATA
 # -----------------------------------
 
 trend_data = load_mock_trends()
@@ -22,76 +45,74 @@ inventory_data = inventory_df.to_dict(
 )
 
 # -----------------------------------
-# BUSINESS METRICS ENGINE
+# BUSINESS METRICS
 # -----------------------------------
 
-business_metrics = calculate_business_metrics(
-    trend_data,
-    inventory_df
+business_metrics = (
+    calculate_business_metrics(
+        trend_data,
+        inventory_df
+    )
 )
 
 # -----------------------------------
-# TASK 1 — TREND ANALYSIS
+# TREND TASK
 # -----------------------------------
 
 trend_task = Task(
+
     description=f"""
     Analyze the following fashion trend dataset:
 
     {trend_data}
 
-    Your responsibilities:
-    - identify top trending aesthetics
-    - analyze momentum scores
-    - identify strongest fashion categories
-    - identify emerging opportunities
-    - summarize consumer behavior patterns
+    Focus on:
+    - momentum acceleration
+    - trend confidence
+    - consumer behavior shifts
+    - high-growth categories
+    - seasonal demand signals
 
-    Focus on actionable business intelligence.
+    Generate enterprise-grade trend intelligence.
     """,
 
     expected_output="""
-    A structured fashion trend analysis report including:
+    Detailed trend intelligence report including:
     - trend rankings
-    - strongest categories
-    - momentum insights
-    - emerging opportunities
-    - consumer behavior observations
+    - category analysis
+    - acceleration insights
+    - demand forecasting
+    - consumer behavior patterns
     """,
 
     agent=trend_agent
 )
 
 # -----------------------------------
-# TASK 2 — INVENTORY ANALYSIS
+# INVENTORY TASK
 # -----------------------------------
 
 inventory_task = Task(
+
     description=f"""
     Analyze the inventory dataset below:
 
     {inventory_data}
 
     Compare inventory performance against
-    the previously analyzed fashion trends.
+    trend momentum and confidence levels.
 
-    Your responsibilities:
-    - identify understocked trending products
-    - identify overstocked weak products
-    - estimate revenue opportunities
-    - estimate inventory risks
-    - recommend inventory adjustments
-
-    Focus on retail optimization and financial impact.
+    Focus on:
+    - understock risks
+    - overstock exposure
+    - inventory imbalance
+    - revenue opportunities
+    - operational inefficiencies
     """,
 
     expected_output="""
-    A structured inventory optimization report including:
-    - understock risks
-    - overstock risks
-    - financial opportunities
-    - inventory recommendations
-    - estimated business impact
+    Enterprise inventory optimization report
+    with financial and operational insights.
     """,
 
     context=[trend_task],
@@ -100,35 +121,33 @@ inventory_task = Task(
 )
 
 # -----------------------------------
-# TASK 3 — EXECUTIVE REPORT
+# STRATEGY TASK
 # -----------------------------------
 
-report_task = Task(
+strategy_task = Task(
+
     description="""
-    Generate a final executive-level fashion
-    intelligence report.
+    Generate advanced retail growth strategies.
 
-    Combine:
-    - trend analysis
-    - inventory optimization insights
-    - financial opportunities
-    - inventory risks
-    - business recommendations
+    Focus on:
+    - merchandising optimization
+    - bundling opportunities
+    - campaign strategies
+    - pricing recommendations
+    - inventory reallocation
+    - category prioritization
 
-    The report should be concise,
-    professional, and business-focused.
-
-    Use markdown formatting.
+    Use simulation insights and
+    business forecasting logic.
     """,
 
     expected_output="""
-    A professional executive markdown report containing:
-    - executive summary
-    - top opportunities
-    - inventory risks
-    - recommended actions
-    - financial insights
-    - trend intelligence summary
+    Strategic retail action plan including:
+    - campaign ideas
+    - merchandising strategy
+    - pricing strategy
+    - inventory allocation strategy
+    - expected business impact
     """,
 
     context=[
@@ -136,23 +155,106 @@ report_task = Task(
         inventory_task
     ],
 
+    agent=strategy_agent
+)
+
+# -----------------------------------
+# REFLECTION TASK
+# -----------------------------------
+
+reflection_task = Task(
+
+    description="""
+    Critically evaluate all previous
+    recommendations and identify:
+
+    - uncertainty
+    - forecasting risks
+    - low-confidence trends
+    - operational weaknesses
+    - unstable assumptions
+
+    Challenge weak recommendations.
+    """,
+
+    expected_output="""
+    Risk analysis and reflection report
+    highlighting uncertainty, volatility,
+    and recommendation risks.
+    """,
+
+    context=[
+        trend_task,
+        inventory_task,
+        strategy_task
+    ],
+
+    agent=reflection_agent
+)
+
+# -----------------------------------
+# REPORT TASK
+# -----------------------------------
+
+report_task = Task(
+
+    description="""
+    Generate a final executive-level
+    retail decision intelligence report.
+
+    Combine:
+    - trend intelligence
+    - inventory optimization
+    - forecasting simulations
+    - strategic recommendations
+    - reflection warnings
+    - financial opportunities
+    - operational risks
+
+    Use professional markdown formatting.
+    """,
+
+    expected_output="""
+    Executive retail intelligence report containing:
+    - executive summary
+    - trend intelligence
+    - inventory analysis
+    - business simulations
+    - strategic recommendations
+    - risk analysis
+    - reflection insights
+    - financial forecasts
+    """,
+
+    context=[
+        trend_task,
+        inventory_task,
+        strategy_task,
+        reflection_task
+    ],
+
     agent=report_agent
 )
 
 # -----------------------------------
-# CREW ORCHESTRATION
+# CREW
 # -----------------------------------
 
 crew = Crew(
+
     agents=[
         trend_agent,
         inventory_agent,
+        strategy_agent,
+        reflection_agent,
         report_agent
     ],
 
     tasks=[
         trend_task,
         inventory_task,
+        strategy_task,
+        reflection_task,
         report_task
     ],
 
@@ -160,7 +262,7 @@ crew = Crew(
 )
 
 # -----------------------------------
-# RUN ANALYSIS FUNCTION
+# RUN FUNCTION
 # -----------------------------------
 
 def run_ftio_analysis():
@@ -178,7 +280,10 @@ def run_ftio_analysis():
         file.write(final_report)
 
     return {
+
         "status": "success",
+
         "report": final_report,
+
         "metrics": business_metrics
     }

@@ -353,6 +353,85 @@ if analyze_button:
                 )
 
         # -----------------------------------
+        # SCENARIO SIMULATIONS
+        # -----------------------------------
+
+        st.markdown("---")
+
+        st.header("Scenario Simulations")
+
+        for simulation in metrics["simulation_results"]:
+
+            restock = simulation["restock"]
+
+            st.markdown(
+                f"""
+                <div class="trend-card">
+
+                <h4>{simulation['product']}</h4>
+
+                <p>
+                <b>Recommended Restock:</b>
+                {restock['recommended_restock']}
+                </p>
+
+                <p>
+                <b>Revenue Forecast:</b>
+                ${restock['estimated_revenue_gain']:,.0f}
+                </p>
+
+                <p>
+                <b>Estimated ROI:</b>
+                {restock['estimated_roi']}%
+                </p>
+
+                <p>
+                <b>Sellout Probability:</b>
+                {int(restock['sellout_probability'] * 100)}%
+                </p>
+
+                <p>
+                <b>Risk Level:</b>
+                {restock['risk']}
+                </p>
+
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        # -----------------------------------
+        # TREND RISK INTELLIGENCE
+        # -----------------------------------
+
+        st.markdown("---")
+
+        st.header("Trend Risk Intelligence")
+
+        for trend in metrics["trend_insights"]:
+
+            st.markdown(
+                f"""
+                <div class="alert-overstock">
+
+                <h4>{trend['trend'].title()}</h4>
+
+                <p>
+                <b>Confidence:</b>
+                {int(trend['confidence'] * 100)}%
+                </p>
+
+                <p>
+                <b>Volatility Score:</b>
+                {trend['volatility_score']}%
+                </p>
+
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        # -----------------------------------
         # EXECUTIVE REPORT
         # -----------------------------------
 
