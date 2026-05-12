@@ -24,7 +24,9 @@ from backend.tools.load_inventory import (
     load_inventory
 )
 
-from backend.agents.base import groq_llm
+from backend.agents.base import (
+    generate_groq_response
+)
 
 
 # -----------------------------------
@@ -322,8 +324,14 @@ def generate_copilot_response(
     # GENERATE RESPONSE
     # -----------------------------------
 
-    response = groq_llm.invoke(
-        prompt
-    )
+    try:
 
-    return response.content
+        response = generate_groq_response(
+            prompt
+        )
+
+        return response
+
+    except Exception as error:
+
+        return f"Copilot Error: {str(error)}"
