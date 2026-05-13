@@ -34,6 +34,46 @@ if "analysis_data" not in st.session_state:
 BACKEND_URL = "http://127.0.0.1:8000"
 
 # ===================================
+# MONITORING API HELPERS
+# ===================================
+
+def fetch_monitoring_status():
+    try:
+        response = requests.get(
+            f"{BACKEND_URL}/monitoring/status"
+        )
+        if response.status_code == 200:
+            return response.json()
+    except:
+        return {}
+    return {}
+
+
+def fetch_monitoring_alerts():
+    try:
+        response = requests.get(
+            f"{BACKEND_URL}/monitoring/alerts"
+        )
+        if response.status_code == 200:
+            return response.json()
+    except:
+        return []
+    return []
+
+
+def fetch_executive_summaries():
+    try:
+        response = requests.get(
+            f"{BACKEND_URL}/monitoring/summaries"
+        )
+        if response.status_code == 200:
+            return response.json()
+    except:
+        return []
+    return []
+
+
+# ===================================
 # HELPER FUNCTIONS
 # ===================================
 
@@ -699,6 +739,66 @@ h3 {
     padding: 16px;
 
     margin-top: 1rem;
+}
+
+.monitoring-card {
+    background: linear-gradient(
+        135deg,
+        #0F172A,
+        #111827
+    );
+    border: 1px solid #334155;
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 1rem;
+}
+
+.alert-card-high {
+    background: linear-gradient(
+        135deg,
+        #450A0A,
+        #7F1D1D
+    );
+    border: 1px solid #EF4444;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.alert-card-medium {
+    background: linear-gradient(
+        135deg,
+        #78350F,
+        #92400E
+    );
+    border: 1px solid #F59E0B;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.alert-card-low {
+    background: linear-gradient(
+        135deg,
+        #1E3A8A,
+        #1D4ED8
+    );
+    border: 1px solid #3B82F6;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.summary-card {
+    background: linear-gradient(
+        135deg,
+        #111827,
+        #1E293B
+    );
+    border: 1px solid #10B981;
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 1rem;
 }
 
 .badge {

@@ -10,6 +10,10 @@ from backend.services.inventory_monitor import (
     detect_inventory_anomalies
 )
 
+from backend.services.executive_monitor import (
+    generate_executive_summary
+)
+
 from datetime import datetime
 
 import time
@@ -28,6 +32,8 @@ class MonitoringEngine:
         self.job_registry = []
 
         self.active_alerts = []
+
+        self.executive_summaries = []
 
     # ===================================
     # START MONITORING SYSTEM
@@ -79,7 +85,7 @@ class MonitoringEngine:
 
             trigger="interval",
 
-            hours=24,
+            seconds=30,
 
             id="daily_summary"
         )
@@ -213,8 +219,38 @@ class MonitoringEngine:
             "Generating daily executive summary..."
         )
 
-        # Placeholder
-        # Added later in Step 15.5
+        summary = (
+            generate_executive_summary(
+                self.active_alerts
+            )
+        )
+
+        self.executive_summaries.append(
+            summary
+        )
+
+        self.executive_summaries = (
+            self.executive_summaries[-20:]
+        )
+
+        print(
+            "Executive summary generated."
+        )
+
+        print(
+            summary.get(
+                "summary",
+                "No summary available."
+            )
+        )
+
+        
+    def get_executive_summaries(self):
+
+        return (
+           self.executive_summaries[-10:]
+       )
+
 
     # ===================================
     # ALERT ACCESSOR

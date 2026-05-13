@@ -50,10 +50,6 @@ initialize_inventory()
 # FASTAPI APP
 # -----------------------------------
 
-# -----------------------------------
-# FASTAPI APP
-# -----------------------------------
-
 app = FastAPI(
     title="FTIO API",
     version="1.0.0"
@@ -235,7 +231,47 @@ async def chat_with_ftio(
         print(str(error))
 
         return {
+
             "status": "error",
 
             "error": str(error)
         }
+
+
+# ===================================
+# MONITORING STATUS
+# ===================================
+
+@app.get("/monitoring/status")
+async def monitoring_status():
+
+    return (
+        monitoring_engine
+        .get_monitoring_status()
+    )
+
+
+# ===================================
+# ACTIVE ALERTS
+# ===================================
+
+@app.get("/monitoring/alerts")
+async def monitoring_alerts():
+
+    return (
+        monitoring_engine
+        .get_active_alerts()
+    )
+
+
+# ===================================
+# EXECUTIVE SUMMARIES
+# ===================================
+
+@app.get("/monitoring/summaries")
+async def monitoring_summaries():
+
+    return (
+        monitoring_engine
+        .get_executive_summaries()
+    )
