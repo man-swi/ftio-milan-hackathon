@@ -30,6 +30,10 @@ from backend.services.database import (
     initialize_database
 )
 
+from backend.services.monitoring_engine import (
+    monitoring_engine
+)
+
 # -----------------------------------
 # INITIALIZE DATABASE
 # -----------------------------------
@@ -46,10 +50,27 @@ initialize_inventory()
 # FASTAPI APP
 # -----------------------------------
 
+# -----------------------------------
+# FASTAPI APP
+# -----------------------------------
+
 app = FastAPI(
     title="FTIO API",
     version="1.0.0"
 )
+
+# -----------------------------------
+# STARTUP MONITORING
+# -----------------------------------
+
+@app.on_event("startup")
+async def startup_monitoring():
+
+    print(
+        "Starting FTIO Autonomous Monitoring..."
+    )
+
+    monitoring_engine.start_monitoring()
 
 # -----------------------------------
 # CORS

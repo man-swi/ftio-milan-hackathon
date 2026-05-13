@@ -6,6 +6,10 @@ from backend.services.trend_monitor import (
     detect_trend_spikes
 )
 
+from backend.services.inventory_monitor import (
+    detect_inventory_anomalies
+)
+
 from datetime import datetime
 
 import time
@@ -164,10 +168,39 @@ class MonitoringEngine:
             f"[{datetime.now()}] "
             "Running inventory monitoring..."
         )
+        alerts = (
+            detect_inventory_anomalies()
+        )
 
-        # Placeholder
-        # Actual anomaly detection added
-        # in Step 15.4
+        if alerts:
+            print(
+                f"Detected "
+                f"{len(alerts)} "
+                f"inventory anomalies."
+            )
+
+            self.active_alerts.extend(
+                alerts
+            )
+
+            self.active_alerts = (
+                self.active_alerts[-50:]
+            )
+
+            for alert in alerts:
+
+                print(
+                    f"ALERT: "
+                    f"{alert['message']}"
+                )
+
+        else:
+
+            print(
+                "No inventory anomalies detected."
+            )
+
+        
 
     # ===================================
     # DAILY EXECUTIVE SUMMARY

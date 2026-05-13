@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 from backend.services.memory_engine import (
-    load_memory
+    retrieve_previous_trend_data
 )
 
 from backend.services.temporal_analysis import (
@@ -19,7 +19,7 @@ def load_current_trends():
 
     with open(
 
-        "backend/data/trends.json",
+        "backend/data/mock_trends.json",
 
         "r"
 
@@ -36,14 +36,7 @@ def detect_trend_spikes():
 
     trends = load_current_trends()
 
-    memory = load_memory()
-
     alerts = []
-
-    historical_trends = memory.get(
-        "historical_trends",
-        {}
-    )
 
     # ===================================
     # PROCESS TRENDS
@@ -66,17 +59,26 @@ def detect_trend_spikes():
             0
         )
 
-        previous_momentum = (
-            historical_trends.get(
-
-                trend_name,
-
-                {}
-            ).get(
-                "momentum",
-                current_momentum
+        previous_data = (
+            retrieve_previous_trend_data(
+                trend_name
             )
         )
+
+        if previous_data:
+
+            previous_momentum = (
+                previous_data.get(
+                    "momentum",
+                    current_momentum
+                )
+            )
+
+        else:
+
+            previous_momentum = (
+                current_momentum
+            )
 
         # ===================================
         # CALCULATE CHANGE
