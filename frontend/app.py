@@ -1059,6 +1059,20 @@ if st.button(
         )
 
 # ===================================
+# ENTERPRISE WORKSPACES
+# ===================================
+
+workspace_tabs = st.tabs([
+    "Executive Overview",
+    "Monitoring Center",
+    "Trend Intelligence",
+    "Simulation Studio",
+    "Decision Intelligence",
+    "Executive Copilot",
+    "Boardroom View"
+])
+
+# ===================================
 # DISPLAY ANALYSIS
 # ===================================
 
@@ -1082,495 +1096,499 @@ if st.session_state.analysis_data:
     )
 
     # ===================================
-    # EXECUTIVE METRICS
+    # EXECUTIVE OVERVIEW TAB
     # ===================================
 
-    st.header("Executive Metrics")
+    with workspace_tabs[0]:
 
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+        st.header("Executive Metrics")
 
-    with col1:
-
-        st.markdown(f"""
-
-        <div class="metric-card">
-
-        <div class="small-label">
-        Revenue Opportunity
-        </div>
-
-        <div class="big-number">
-        ${metrics.get('total_revenue_opportunity',0):,.0f}
-        </div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
-
-    with col2:
-
-        st.markdown(f"""
-
-        <div class="metric-card">
-
-        <div class="small-label">
-        Inventory Risk
-        </div>
-
-        <div class="big-number">
-        ${metrics.get('total_inventory_risk',0):,.0f}
-        </div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
-
-    with col3:
-
-        st.markdown(f"""
-
-        <div class="metric-card">
-
-        <div class="small-label">
-        Top Trend Momentum
-        </div>
-
-        <div class="big-number">
-        {metrics.get('top_trend_momentum','N/A')}
-        </div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
-
-    with col4:
-
-        st.markdown(f"""
-
-        <div class="metric-card">
-
-        <div class="small-label">
-        Avg Confidence
-        </div>
-
-        <div class="big-number">
-        {metrics.get('average_confidence','N/A')}
-        </div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
-
-    with col5:
-
-        st.markdown(f"""
-
-        <div class="metric-card">
-
-        <div class="small-label">
-        Avg Consensus
-        </div>
-
-        <div class="big-number">
-        {safe_percentage(metrics.get('average_consensus_score',0))}
-        </div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
-
-    with col6:
-
-        st.markdown(f"""
-
-        <div class="metric-card">
-
-        <div class="small-label">
-        Risk Overrides
-        </div>
-
-        <div class="big-number">
-        {metrics.get('total_consensus_overrides',0)}
-        </div>
-
-        </div>
-
-        """, unsafe_allow_html=True)
-
-    # ===================================
-    # VISUAL ANALYTICS
-    # ===================================
-
-    trend_df = pd.DataFrame(
-        metrics.get("trend_insights", [])
-    )
-
-    if not trend_df.empty:
-
-        st.header("Visual Intelligence")
-
-        col1, col2 = st.columns(2)
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
 
         with col1:
 
-            fig = px.bar(
-                trend_df,
-                x="trend",
-                y="momentum",
-                color="confidence",
-                title="Trend Momentum Analysis"
-            )
+            st.markdown(f"""
 
-            st.plotly_chart(
-                fig,
-                width="stretch"
-            )
+            <div class="metric-card">
+
+            <div class="small-label">
+            Revenue Opportunity
+            </div>
+
+            <div class="big-number">
+            ${metrics.get('total_revenue_opportunity',0):,.0f}
+            </div>
+
+            </div>
+
+            """, unsafe_allow_html=True)
 
         with col2:
 
-            fig2 = px.scatter(
-                trend_df,
-                x="momentum",
-                y="volatility_score",
-                size="confidence",
-                color="trend",
-                title="Trend Volatility Mapping"
-            )
+            st.markdown(f"""
 
-            st.plotly_chart(
-                fig2,
-                width="stretch"
-            )
+            <div class="metric-card">
 
-    # ===================================
-    # SIMULATIONS
-    # ===================================
+            <div class="small-label">
+            Inventory Risk
+            </div>
 
-    st.header("Scenario Simulations")
+            <div class="big-number">
+            ${metrics.get('total_inventory_risk',0):,.0f}
+            </div>
 
-    for simulation in metrics.get(
-        "simulation_results",
-        []
-    ):
+            </div>
 
-        restock = simulation.get(
-            "restock",
-            {}
-        )
+            """, unsafe_allow_html=True)
 
-        st.markdown(f"""
+        with col3:
 
-        <div class="executive-panel">
+            st.markdown(f"""
 
-        <h2>{simulation.get('product','Unknown Product')}</h2>
+            <div class="metric-card">
 
-        <p>
-        <b>Trend:</b>
-        {simulation.get('trend','N/A')}
-        </p>
+            <div class="small-label">
+            Top Trend Momentum
+            </div>
 
-        <hr>
+            <div class="big-number">
+            {metrics.get('top_trend_momentum','N/A')}
+            </div>
 
-        <p>
-        <b>Recommended Restock:</b>
-        {restock.get('recommended_restock','N/A')}
-        </p>
+            </div>
 
-        <p>
-        <b>Revenue Forecast:</b>
-        ${restock.get('estimated_revenue_gain',0):,.0f}
-        </p>
+            """, unsafe_allow_html=True)
 
-        <p>
-        <b>Estimated ROI:</b>
-        {restock.get('estimated_roi','N/A')}%
-        </p>
+        with col4:
 
-        <p>
-        <b>Inventory Health Score:</b>
-        {restock.get('inventory_health_score','N/A')}
-        </p>
+            st.markdown(f"""
 
-        <p>
-        <b>Demand Label:</b>
-        {restock.get('demand_label','N/A')}
-        </p>
+            <div class="metric-card">
 
-        </div>
+            <div class="small-label">
+            Avg Confidence
+            </div>
 
-        """, unsafe_allow_html=True)
+            <div class="big-number">
+            {metrics.get('average_confidence','N/A')}
+            </div>
 
-        # ===================================
-        # BADGES
-        # ===================================
+            </div>
 
-        badge_html = ""
+            """, unsafe_allow_html=True)
 
-        if restock.get("stockout_risk") in [
-            "HIGH",
-            "CRITICAL"
-        ]:
+        with col5:
 
-            badge_html += """
-            <span class="badge badge-red">
-            HIGH SELLOUT RISK
-            </span>
-            """
+            st.markdown(f"""
 
-        if restock.get("inventory_risk") == "LOW":
+            <div class="metric-card">
 
-            badge_html += """
-            <span class="badge badge-green">
-            LOW INVENTORY RISK
-            </span>
-            """
+            <div class="small-label">
+            Avg Consensus
+            </div>
 
-        if restock.get("trend_strength",0) >= 0.7:
+            <div class="big-number">
+            {safe_percentage(metrics.get('average_consensus_score',0))}
+            </div>
 
-            badge_html += """
-            <span class="badge badge-blue">
-            STRONG DEMAND
-            </span>
-            """
+            </div>
 
-        if restock.get("overstock_probability",1) <= 0.2:
+            """, unsafe_allow_html=True)
 
-            badge_html += """
-            <span class="badge badge-yellow">
-            LOW OVERSTOCK RISK
-            </span>
-            """
+        with col6:
 
-        st.markdown(
-            badge_html,
-            unsafe_allow_html=True
-        )
+            st.markdown(f"""
+
+            <div class="metric-card">
+
+            <div class="small-label">
+            Risk Overrides
+            </div>
+
+            <div class="big-number">
+            {metrics.get('total_consensus_overrides',0)}
+            </div>
+
+            </div>
+
+            """, unsafe_allow_html=True)
 
         # ===================================
-        # RECOMMENDATION EXPLANATION
+        # VISUAL ANALYTICS
         # ===================================
 
-        decision_explanation = restock.get(
-            "decision_explanation",
-            {}
+        trend_df = pd.DataFrame(
+            metrics.get("trend_insights", [])
         )
 
-        st.markdown(
-            render_decision_explanation(
-                decision_explanation
-            ),
-            unsafe_allow_html=True
-        )
+        if not trend_df.empty:
 
-        # ===================================
-        # CONFIDENCE INSIGHTS
-        # ===================================
+            st.header("Visual Intelligence")
 
-        confidence_explanation = restock.get(
-            "confidence_explanation",
-            {}
-        )
+            col1, col2 = st.columns(2)
 
-        st.markdown(
-            render_confidence_explanation(
-                confidence_explanation
-            ),
-            unsafe_allow_html=True
-        )
+            with col1:
 
-        # ===================================
-        # FINANCIAL RATIONALE
-        # ===================================
-
-        financial_rationale = restock.get(
-            "financial_rationale",
-            {}
-        )
-
-        st.markdown(
-            render_financial_rationale(
-                financial_rationale,
-                restock
-            ),
-            unsafe_allow_html=True
-        )
-
-        # ===================================
-        # RISK RATIONALE
-        # ===================================
-
-        risk_rationale = restock.get(
-            "risk_rationale",
-            {}
-        )
-
-        st.markdown(
-            render_risk_rationale(
-                risk_rationale,
-                restock
-            ),
-            unsafe_allow_html=True
-        )
-
-        # ===================================
-        # CONSENSUS INTELLIGENCE
-        # ===================================
-
-        st.subheader(
-            "Executive Consensus Intelligence"
-        )
-
-        consensus_data = simulation.get(
-            "consensus",
-            {}
-        )
-
-        st.markdown(
-            render_consensus_panel(
-                consensus_data
-            ),
-            unsafe_allow_html=True
-        )
-
-        # ===================================
-        # DECISION TRACE
-        # ===================================
-
-        st.subheader(
-            "Agent Decision Timeline"
-        )
-
-        decision_trace = restock.get(
-            "decision_trace",
-            []
-        )
-
-        st.markdown(
-            render_decision_trace(
-                decision_trace
-            ),
-            unsafe_allow_html=True
-        )
-
-    # ===================================
-    # DOWNLOAD REPORT
-    # ===================================
-
-    st.download_button(
-        label="Download Executive Report",
-        data=report,
-        file_name="ftio_executive_report.md",
-        mime="text/markdown"
-    )
-
-# ===================================
-# EXECUTIVE COPILOT
-# ===================================
-
-st.markdown("---")
-
-st.header("FTIO Executive Copilot")
-
-st.caption(
-    "AI retail strategy assistant"
-)
-
-suggested_prompts = [
-
-    "What inventory should we prioritize for Q4?",
-    "Which trends are accelerating fastest?",
-    "Which products have highest inventory risk?",
-    "What merchandising strategy should we use for Quiet Luxury?",
-    "Which categories have highest revenue potential?"
-
-]
-
-cols = st.columns(5)
-
-for index, prompt in enumerate(
-    suggested_prompts
-):
-
-    with cols[index]:
-
-        if st.button(prompt):
-
-            st.session_state.user_prompt = (
-                prompt
-            )
-
-user_input = st.text_input(
-    "Ask FTIO",
-    value=st.session_state.get(
-        "user_prompt",
-        ""
-    ),
-    placeholder=
-    "Ask about trends, inventory, simulations, or strategy..."
-)
-
-if st.button("Send to FTIO"):
-
-    if user_input.strip():
-
-        with st.spinner(
-            "FTIO generating executive intelligence..."
-        ):
-
-            try:
-
-                response = requests.post(
-                    f"{BACKEND_URL}/chat",
-                    json={
-                        "message": user_input
-                    },
-                    timeout=120
+                fig = px.bar(
+                    trend_df,
+                    x="trend",
+                    y="momentum",
+                    color="confidence",
+                    title="Trend Momentum Analysis"
                 )
 
-                result = response.json()
+                st.plotly_chart(
+                    fig,
+                    width="stretch"
+                )
 
-                if "response" in result:
+            with col2:
 
-                    st.session_state.chat_history.append({
+                fig2 = px.scatter(
+                    trend_df,
+                    x="momentum",
+                    y="volatility_score",
+                    size="confidence",
+                    color="trend",
+                    title="Trend Volatility Mapping"
+                )
 
-                        "question": user_input,
+                st.plotly_chart(
+                    fig2,
+                    width="stretch"
+                )
 
-                        "answer":
-                        result["response"]
+    # ===================================
+    # SIMULATION STUDIO TAB
+    # ===================================
 
-                    })
+    with workspace_tabs[3]:
 
-                else:
+        st.header("Scenario Simulations")
 
-                    st.error(
-                        result.get(
-                            "error",
-                            "Unknown error"
-                        )
+        for simulation in metrics.get(
+            "simulation_results",
+            []
+        ):
+
+            restock = simulation.get(
+                "restock",
+                {}
+            )
+
+            st.markdown(f"""
+
+            <div class="executive-panel">
+
+            <h2>{simulation.get('product','Unknown Product')}</h2>
+
+            <p>
+            <b>Trend:</b>
+            {simulation.get('trend','N/A')}
+            </p>
+
+            <hr>
+
+            <p>
+            <b>Recommended Restock:</b>
+            {restock.get('recommended_restock','N/A')}
+            </p>
+
+            <p>
+            <b>Revenue Forecast:</b>
+            ${restock.get('estimated_revenue_gain',0):,.0f}
+            </p>
+
+            <p>
+            <b>Estimated ROI:</b>
+            {restock.get('estimated_roi','N/A')}%
+            </p>
+
+            <p>
+            <b>Inventory Health Score:</b>
+            {restock.get('inventory_health_score','N/A')}
+            </p>
+
+            <p>
+            <b>Demand Label:</b>
+            {restock.get('demand_label','N/A')}
+            </p>
+
+            </div>
+
+            """, unsafe_allow_html=True)
+
+            # ===================================
+            # BADGES
+            # ===================================
+
+            badge_html = ""
+
+            if restock.get("stockout_risk") in [
+                "HIGH",
+                "CRITICAL"
+            ]:
+
+                badge_html += """
+                <span class="badge badge-red">
+                HIGH SELLOUT RISK
+                </span>
+                """
+
+            if restock.get("inventory_risk") == "LOW":
+
+                badge_html += """
+                <span class="badge badge-green">
+                LOW INVENTORY RISK
+                </span>
+                """
+
+            if restock.get("trend_strength",0) >= 0.7:
+
+                badge_html += """
+                <span class="badge badge-blue">
+                STRONG DEMAND
+                </span>
+                """
+
+            if restock.get("overstock_probability",1) <= 0.2:
+
+                badge_html += """
+                <span class="badge badge-yellow">
+                LOW OVERSTOCK RISK
+                </span>
+                """
+
+            st.markdown(
+                badge_html,
+                unsafe_allow_html=True
+            )
+
+            # ===================================
+            # RECOMMENDATION EXPLANATION
+            # ===================================
+
+            decision_explanation = restock.get(
+                "decision_explanation",
+                {}
+            )
+
+            st.markdown(
+                render_decision_explanation(
+                    decision_explanation
+                ),
+                unsafe_allow_html=True
+            )
+
+            # ===================================
+            # CONFIDENCE INSIGHTS
+            # ===================================
+
+            confidence_explanation = restock.get(
+                "confidence_explanation",
+                {}
+            )
+
+            st.markdown(
+                render_confidence_explanation(
+                    confidence_explanation
+                ),
+                unsafe_allow_html=True
+            )
+
+            # ===================================
+            # FINANCIAL RATIONALE
+            # ===================================
+
+            financial_rationale = restock.get(
+                "financial_rationale",
+                {}
+            )
+
+            st.markdown(
+                render_financial_rationale(
+                    financial_rationale,
+                    restock
+                ),
+                unsafe_allow_html=True
+            )
+
+            # ===================================
+            # RISK RATIONALE
+            # ===================================
+
+            risk_rationale = restock.get(
+                "risk_rationale",
+                {}
+            )
+
+            st.markdown(
+                render_risk_rationale(
+                    risk_rationale,
+                    restock
+                ),
+                unsafe_allow_html=True
+            )
+
+            # ===================================
+            # CONSENSUS INTELLIGENCE
+            # ===================================
+
+            st.subheader(
+                "Executive Consensus Intelligence"
+            )
+
+            consensus_data = simulation.get(
+                "consensus",
+                {}
+            )
+
+            st.markdown(
+                render_consensus_panel(
+                    consensus_data
+                ),
+                unsafe_allow_html=True
+            )
+
+            # ===================================
+            # DECISION TRACE
+            # ===================================
+
+            st.subheader(
+                "Agent Decision Timeline"
+            )
+
+            decision_trace = restock.get(
+                "decision_trace",
+                []
+            )
+
+            st.markdown(
+                render_decision_trace(
+                    decision_trace
+                ),
+                unsafe_allow_html=True
+            )
+
+        # ===================================
+        # DOWNLOAD REPORT
+        # ===================================
+
+        st.download_button(
+            label="Download Executive Report",
+            data=report,
+            file_name="ftio_executive_report.md",
+            mime="text/markdown"
+        )
+
+# ===================================
+# EXECUTIVE COPILOT TAB
+# ===================================
+
+with workspace_tabs[5]:
+
+    st.header("FTIO Executive Copilot")
+
+    st.caption(
+        "AI retail strategy assistant"
+    )
+
+    suggested_prompts = [
+
+        "What inventory should we prioritize for Q4?",
+        "Which trends are accelerating fastest?",
+        "Which products have highest inventory risk?",
+        "What merchandising strategy should we use for Quiet Luxury?",
+        "Which categories have highest revenue potential?"
+
+    ]
+
+    cols = st.columns(5)
+
+    for index, prompt in enumerate(
+        suggested_prompts
+    ):
+
+        with cols[index]:
+
+            if st.button(prompt):
+
+                st.session_state.user_prompt = (
+                    prompt
+                )
+
+    user_input = st.text_input(
+        "Ask FTIO",
+        value=st.session_state.get(
+            "user_prompt",
+            ""
+        ),
+        placeholder=
+        "Ask about trends, inventory, simulations, or strategy..."
+    )
+
+    if st.button("Send to FTIO"):
+
+        if user_input.strip():
+
+            with st.spinner(
+                "FTIO generating executive intelligence..."
+            ):
+
+                try:
+
+                    response = requests.post(
+                        f"{BACKEND_URL}/chat",
+                        json={
+                            "message": user_input
+                        },
+                        timeout=120
                     )
 
-            except Exception as error:
+                    result = response.json()
 
-                st.error(str(error))
+                    if "response" in result:
 
-# ===================================
-# CHAT HISTORY
-# ===================================
+                        st.session_state.chat_history.append({
 
-st.header("Executive Conversations")
+                            "question": user_input,
 
-for chat in reversed(
-    st.session_state.chat_history
-):
+                            "answer":
+                            result["response"]
 
-    with st.chat_message("user"):
+                        })
 
-        st.markdown(
-            chat["question"]
-        )
+                    else:
 
-    with st.chat_message("assistant"):
+                        st.error(
+                            result.get(
+                                "error",
+                                "Unknown error"
+                            )
+                        )
 
-        st.markdown(
-            chat["answer"]
-        )
+                except Exception as error:
+
+                    st.error(str(error))
+
+    # ===================================
+    # CHAT HISTORY
+    # ===================================
+
+    st.header("Executive Conversations")
+
+    for chat in reversed(
+        st.session_state.chat_history
+    ):
+
+        with st.chat_message("user"):
+
+            st.markdown(
+                chat["question"]
+            )
+
+        with st.chat_message("assistant"):
+
+            st.markdown(
+                chat["answer"]
+            )
