@@ -21,6 +21,131 @@ def get_connection():
 
 
 # -----------------------------------
+# INITIALIZE DATABASE
+# -----------------------------------
+
+def initialize_database():
+
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    # -----------------------------------
+    # HISTORICAL TRENDS
+    # -----------------------------------
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS historical_trends (
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        trend_name TEXT,
+
+        momentum REAL,
+
+        confidence REAL,
+
+        category TEXT,
+
+        recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # -----------------------------------
+    # ANALYSIS HISTORY
+    # -----------------------------------
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS analysis_history (
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        total_revenue_opportunity REAL,
+
+        total_inventory_risk REAL,
+
+        average_confidence REAL,
+
+        recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # -----------------------------------
+    # INVENTORY SNAPSHOTS
+    # -----------------------------------
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS inventory_snapshots (
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        sku TEXT,
+
+        product_name TEXT,
+
+        stock INTEGER,
+
+        risk_level TEXT,
+
+        recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # -----------------------------------
+    # RECOMMENDATION HISTORY
+    # -----------------------------------
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS recommendation_history (
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        strategy_output TEXT,
+
+        reflection_output TEXT,
+
+        recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    # -----------------------------------
+    # STRATEGY MEMORY
+    # -----------------------------------
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS strategy_memory (
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        strategy_text TEXT,
+
+        recorded_at TEXT
+    )
+    """)
+
+    # -----------------------------------
+    # REFLECTION MEMORY
+    # -----------------------------------
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS reflection_memory (
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        reflection_text TEXT,
+
+        recorded_at TEXT
+    )
+    """)
+
+    conn.commit()
+
+    conn.close()
+
+    print("DATABASE INITIALIZED")
+
+
+# -----------------------------------
 # SAVE HISTORICAL TRENDS
 # -----------------------------------
 

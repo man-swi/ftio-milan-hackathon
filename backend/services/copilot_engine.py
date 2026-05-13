@@ -34,33 +34,36 @@ from backend.agents.base import (
 # -----------------------------------
 
 def build_inventory_summary(
-    inventory_df
+    inventory_data
 ):
 
-    inventory_summary = []
+    summary = []
 
-    for row in inventory_df.to_dict(
-        orient="records"
-    ):
+    for item in inventory_data:
 
-        inventory_summary.append(
+        summary.append({
 
-            f"""
-            Product: {row['product_name']}
-            Category: {row['category']}
-            Stock: {row['stock']}
-            Sales Velocity: {row['sales_velocity']}
-            Unit Price: {row['unit_price']}
-            """
-        )
+            "product":
+            item["product_name"],
 
-    return "\n".join(
-        inventory_summary
-    )
+            "category":
+            item["category"],
+
+            "stock":
+            item["stock"],
+
+            "velocity":
+            item["sales_velocity"],
+
+            "price":
+            item["unit_price"]
+        })
+
+    return summary
 
 
 # -----------------------------------
-# BUILD TEMPORAL MEMORY SUMMARY
+# BUILD MEMORY SUMMARY
 # -----------------------------------
 
 def build_memory_summary(
@@ -69,269 +72,389 @@ def build_memory_summary(
 
     if not historical_trends:
 
-        return "No historical trend memory available."
+        return []
 
-    memory_lines = []
+    memory_summary = []
 
-    for trend in historical_trends:
+    for trend in historical_trends[:6]:
 
-        memory_lines.append(
+        memory_summary.append({
 
-            f"""
-            Trend: {trend['trend_name']}
-            Momentum: {trend['momentum']}
-            Recorded At: {trend['recorded_at']}
-            """
-        )
+            "trend":
+            trend["trend_name"],
 
-    return "\n".join(
-        memory_lines
-    )
+            "momentum":
+            trend["momentum"],
+
+            "recorded_at":
+            trend["recorded_at"]
+        })
+
+    return memory_summary
 
 
 # -----------------------------------
-# BUILD SCENARIO SUMMARIES
+# BUILD EXECUTIVE SIMULATION SUMMARY
 # -----------------------------------
 
 def build_simulation_summary(
     trend_data,
-    inventory_df
+    inventory_data
 ):
 
-    simulation_outputs = []
+    simulations = []
 
-    inventory_records = inventory_df.to_dict(
-        orient="records"
+    for trend in trend_data:
+
+        for item in inventory_data:
+
+            if (
+                item["category"].lower()
+                !=
+                trend["category"].lower()
+            ):
+
+                continue
+
+            restock = simulate_restock(
+                trend,
+                item
+            )
+
+            overstock = (
+                simulate_overstock_risk(
+                    trend,
+                    item
+                )
+            )
+
+            profit = (
+                simulate_profit_change(
+                    restock[
+                        "estimated_revenue_gain"
+                    ]
+                )
+            )
+
+            simulations.append({
+
+                "product":
+                item["product_name"],
+
+                "category":
+                item["category"],
+
+                "trend":
+                trend["trend"],
+
+                "restock":
+                restock[
+                    "recommended_restock"
+                ],
+
+                "revenue":
+                restock[
+                    "estimated_revenue_gain"
+                ],
+
+                "sellout_probability":
+                restock[
+                    "sellout_probability"
+                ],
+
+                "stockout_risk":
+                restock[
+                    "stockout_risk"
+                ],
+
+                "inventory_risk":
+                restock[
+                    "inventory_risk"
+                ],
+
+                "overstock_risk":
+                overstock[
+                    "risk_level"
+                ],
+
+                "profit_delta":
+                profit[
+                    "profit_delta"
+                ],
+
+                "momentum":
+                trend["momentum"]
+            })
+
+    # -----------------------------------
+    # SORT BY REVENUE OPPORTUNITY
+    # -----------------------------------
+
+    simulations = sorted(
+
+        simulations,
+
+        key=lambda x:
+        x["revenue"],
+
+        reverse=True
     )
 
-    for trend, item in zip(
-        trend_data,
-        inventory_records
-    ):
+    # -----------------------------------
+    # KEEP ONLY TOP EXECUTIVE INSIGHTS
+    # -----------------------------------
 
-        restock_result = simulate_restock(
-            trend,
-            item
-        )
+    return simulations[:5]
 
-        overstock_result = (
-            simulate_overstock_risk(
-                trend,
-                item
-            )
-        )
 
-        profit_result = (
-            simulate_profit_change(
-                trend,
-                item
-            )
-        )
+# -----------------------------------
+# BUILD EXECUTIVE PRIORITIES
+# -----------------------------------
 
-        simulation_outputs.append(
+def build_executive_priorities(
+    simulations
+):
+
+    priorities = []
+
+    for sim in simulations:
+
+        priorities.append(
 
             f"""
-            Product: {item['product_name']}
+            Product:
+            {sim['product']}
 
-            Recommended Restock:
-            {restock_result['recommended_restock']}
+            Revenue:
+            ${sim['revenue']}
 
-            Revenue Gain:
-            {restock_result['estimated_revenue_gain']}
+            Sellout:
+            {round(sim['sellout_probability'] * 100)}%
 
-            Sellout Probability:
-            {restock_result['sellout_probability']}
+            Inventory Risk:
+            {sim['inventory_risk']}
 
-            Risk Level:
-            {restock_result['risk']}
-
-            Overstock Risk:
-            {overstock_result['risk_level']}
-
-            Profit Delta:
-            {profit_result['profit_delta']}
+            Trend:
+            {sim['trend']}
             """
         )
 
     return "\n".join(
-        simulation_outputs
+        priorities
     )
 
 
 # -----------------------------------
-# BUILD COPILOT RESPONSE
+# BUILD RESPONSE STYLE RULES
+# -----------------------------------
+
+def build_response_rules():
+
+    return """
+
+    RESPONSE STYLE RULES
+
+    Your response MUST:
+
+    - sound like a senior retail strategist
+    - prioritize executive clarity
+    - use concise business language
+    - avoid repetitive explanations
+    - avoid repeating trend names excessively
+    - avoid repeating inventory risk terminology
+    - avoid generic AI phrasing
+
+    RESPONSE STRUCTURE:
+
+    1. Executive Summary
+    - 2-3 sentence overview
+
+    2. Top Priorities
+    - maximum 3 bullets
+    - ranked by revenue impact
+
+    3. Risk Signals
+    - short concise section
+
+    4. Strategic Action
+    - final recommendation
+
+    IMPORTANT:
+
+    - Keep response under 500 words
+    - Do NOT repeat the same insight twice
+    - Compress repetitive simulation details
+    - Mention only highest-impact products
+    - Focus on decisions, not descriptions
+    - Avoid long introductions
+    - Avoid unnecessary trend storytelling
+    """
+    
+
+# -----------------------------------
+# GENERATE COPILOT RESPONSE
 # -----------------------------------
 
 def generate_copilot_response(
     user_query
 ):
 
-    # -----------------------------------
-    # LOAD CURRENT DATA
-    # -----------------------------------
-
-    trend_data = load_mock_trends()
-
-    inventory_df = load_inventory()
-
-    # -----------------------------------
-    # BUSINESS METRICS
-    # -----------------------------------
-
-    business_metrics = (
-        calculate_business_metrics(
-            trend_data,
-            inventory_df
-        )
-    )
-
-    # -----------------------------------
-    # RETRIEVAL CONTEXT
-    # -----------------------------------
-
-    retrieved_context = retrieve_context(
-        user_query
-    )
-
-    # -----------------------------------
-    # TEMPORAL MEMORY
-    # -----------------------------------
-
-    historical_trends = (
-        get_historical_trends()
-    )
-
-    memory_summary = (
-        build_memory_summary(
-            historical_trends
-        )
-    )
-
-    # -----------------------------------
-    # INVENTORY CONTEXT
-    # -----------------------------------
-
-    inventory_context = (
-        build_inventory_summary(
-            inventory_df
-        )
-    )
-
-    # -----------------------------------
-    # SCENARIO SIMULATION CONTEXT
-    # -----------------------------------
-
-    simulation_context = (
-        build_simulation_summary(
-            trend_data,
-            inventory_df
-        )
-    )
-
-    # -----------------------------------
-    # PROMPT
-    # -----------------------------------
-
-    prompt = f"""
-
-    You are FTIO.
-
-    FTIO is an enterprise-grade
-    AI Retail Copilot.
-
-    Your job is to help fashion executives make:
-
-    - inventory decisions
-    - merchandising decisions
-    - pricing decisions
-    - retail strategy decisions
-    - risk management decisions
-
-    ===================================
-    USER QUESTION
-    ===================================
-
-    {user_query}
-
-    ===================================
-    BUSINESS METRICS
-    ===================================
-
-    Revenue Opportunity:
-    {business_metrics['total_revenue_opportunity']}
-
-    Inventory Risk:
-    {business_metrics['total_inventory_risk']}
-
-    Average Confidence:
-    {business_metrics['average_confidence']}
-
-    ===================================
-    CURRENT INVENTORY
-    ===================================
-
-    {inventory_context}
-
-    ===================================
-    HISTORICAL TREND MEMORY
-    ===================================
-
-    {memory_summary}
-
-    ===================================
-    RETRIEVED RETAIL KNOWLEDGE
-    ===================================
-
-    {retrieved_context}
-
-    ===================================
-    BUSINESS SIMULATION INSIGHTS
-    ===================================
-
-    {simulation_context}
-
-    ===================================
-    RESPONSE INSTRUCTIONS
-    ===================================
-
-    Your response must:
-
-    - sound like an executive retail advisor
-    - provide strategic reasoning
-    - explain business implications
-    - reference inventory risks
-    - mention trend acceleration when relevant
-    - use retrieval context when useful
-    - mention simulation outcomes when useful
-
-    Avoid:
-
-    - generic chatbot responses
-    - short vague answers
-    - unnecessary repetition
-    - hallucinated numbers
-
-    Keep answers:
-
-    - professional
-    - data-driven
-    - strategic
-    - concise but insightful
-
-    """
-
-    # -----------------------------------
-    # GENERATE RESPONSE
-    # -----------------------------------
-
     try:
 
-        response = generate_groq_response(
-            prompt
+        print("STEP 1")
+
+        trend_data = (
+            load_mock_trends()
         )
+
+        print("STEP 2")
+
+        inventory_data = (
+            load_inventory()
+        )
+
+        print("STEP 3")
+
+        business_metrics = (
+            calculate_business_metrics(
+                trend_data,
+                inventory_data
+            )
+        )
+
+        print("STEP 4")
+
+        retrieved_context = (
+            retrieve_context(
+                user_query
+            )
+        )
+
+        print("STEP 5")
+
+        historical_trends = (
+            get_historical_trends()
+        )
+
+        print("STEP 6")
+
+        inventory_summary = (
+            build_inventory_summary(
+                inventory_data
+            )
+        )
+
+        print("STEP 7")
+
+        memory_summary = (
+            build_memory_summary(
+                historical_trends
+            )
+        )
+
+        print("STEP 8")
+
+        simulation_summary = (
+            build_simulation_summary(
+                trend_data,
+                inventory_data
+            )
+        )
+
+        print("STEP 9")
+
+        executive_priorities = (
+            build_executive_priorities(
+                simulation_summary
+            )
+        )
+
+        print("STEP 10")
+
+        response_rules = (
+            build_response_rules()
+        )
+
+        # -----------------------------------
+        # EXECUTIVE PROMPT
+        # -----------------------------------
+
+        prompt = f"""
+
+        You are FTIO.
+
+        FTIO is an enterprise AI retail
+        strategy copilot for fashion executives.
+
+        ===================================
+        USER QUESTION
+        ===================================
+
+        {user_query}
+
+        ===================================
+        BUSINESS METRICS
+        ===================================
+
+        Revenue Opportunity:
+        ${business_metrics['total_revenue_opportunity']}
+
+        Inventory Risk:
+        ${business_metrics['total_inventory_risk']}
+
+        Average Confidence:
+        {business_metrics['average_confidence']}
+
+        ===================================
+        EXECUTIVE PRIORITIES
+        ===================================
+
+        {executive_priorities}
+
+        ===================================
+        INVENTORY SNAPSHOT
+        ===================================
+
+        {inventory_summary}
+
+        ===================================
+        TEMPORAL TREND MEMORY
+        ===================================
+
+        {memory_summary}
+
+        ===================================
+        RETAIL KNOWLEDGE
+        ===================================
+
+        {retrieved_context}
+
+        ===================================
+        RESPONSE RULES
+        ===================================
+
+        {response_rules}
+
+        """
+
+        print("STEP 11")
+
+        response = (
+            generate_groq_response(
+                prompt
+            )
+        )
+
+        print("STEP 12")
 
         return response
 
     except Exception as error:
 
-        return f"Copilot Error: {str(error)}"
+        print("COPILOT ERROR:")
+
+        print(str(error))
+
+        return (
+            f"Copilot Error: {str(error)}"
+        )

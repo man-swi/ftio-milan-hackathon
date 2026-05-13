@@ -39,14 +39,16 @@ def save_trend_history(
 
     connection.close()
 
+
 # -----------------------------------
 # PERSIST ANALYSIS MEMORY
 # -----------------------------------
 
 def persist_analysis_memory(
     trend_data,
-    inventory_data,
-    recommendations
+    metrics,
+    strategy_output,
+    reflection_output
 ):
 
     connection = get_connection()
@@ -76,9 +78,56 @@ def persist_analysis_memory(
             )
         )
 
+    # -----------------------------------
+    # OPTIONAL:
+    # STORE STRATEGY OUTPUTS
+    # -----------------------------------
+
+    if strategy_output:
+
+        cursor.execute(
+            """
+            INSERT INTO strategy_memory (
+                strategy_text,
+                recorded_at
+            )
+            VALUES (?, ?)
+            """,
+            (
+                strategy_output,
+                datetime.now()
+                .strftime("%Y-%m-%d %H:%M:%S")
+            )
+        )
+
+    # -----------------------------------
+    # OPTIONAL:
+    # STORE REFLECTION OUTPUTS
+    # -----------------------------------
+
+    if reflection_output:
+
+        cursor.execute(
+            """
+            INSERT INTO reflection_memory (
+                reflection_text,
+                recorded_at
+            )
+            VALUES (?, ?)
+            """,
+            (
+                reflection_output,
+                datetime.now()
+                .strftime("%Y-%m-%d %H:%M:%S")
+            )
+        )
+
     connection.commit()
 
     connection.close()
+
+    print("MEMORY SAVED")
+
 
 # -----------------------------------
 # GET PREVIOUS MOMENTUM
@@ -112,96 +161,6 @@ def get_previous_momentum(
         return result[0]
 
     return None
-
-
-# -----------------------------------
-# CALCULATE MOMENTUM ACCELERATION
-# -----------------------------------
-
-def calculate_momentum_acceleration(
-    trend_name,
-    current_momentum
-):
-
-    previous_momentum = (
-        get_previous_momentum(
-            trend_name
-        )
-    )
-
-    if previous_momentum is None:
-
-        save_trend_history(
-            trend_name,
-            current_momentum
-        )
-
-        return {
-
-            "previous_momentum": None,
-
-            "current_momentum":
-            current_momentum,
-
-            "momentum_change": None,
-
-            "acceleration_label":
-            "NEW TREND"
-        }
-
-    momentum_change = round(
-
-        (
-            current_momentum
-            - previous_momentum
-        ) * 100,
-
-        2
-    )
-
-    if momentum_change > 15:
-
-        acceleration_label = (
-            "HIGH ACCELERATION"
-        )
-
-    elif momentum_change > 5:
-
-        acceleration_label = (
-            "RISING"
-        )
-
-    elif momentum_change < -5:
-
-        acceleration_label = (
-            "DECLINING"
-        )
-
-    else:
-
-        acceleration_label = (
-            "STABLE"
-        )
-
-    save_trend_history(
-        trend_name,
-        current_momentum
-    )
-
-    return {
-
-        "previous_momentum":
-        previous_momentum,
-
-        "current_momentum":
-        current_momentum,
-
-        "momentum_change":
-        momentum_change,
-
-        "acceleration_label":
-        acceleration_label
-    }
 
 
 # -----------------------------------
@@ -245,6 +204,7 @@ def get_historical_trends():
 
     return historical_data
 
+
 # -----------------------------------
 # RETRIEVE PREVIOUS TREND DATA
 # -----------------------------------
@@ -284,3 +244,110 @@ def retrieve_previous_trend_data(
         }
 
     return None
+
+
+# -----------------------------------
+# GET STRATEGY MEMORY
+# -----------------------------------
+
+def get_strategy_memory():
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            strategy_text,
+            recorded_at
+        FROM strategy_memory
+        ORDER BY recorded_at DESC
+        LIMIT 5
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    connection.close()
+
+    strategy_history = []
+
+    for row in rows:
+
+        strategy_history.append({
+
+            "strategy_text": row[0],
+
+            "recorded_at": row[1]
+        })
+
+    return strategy_history
+
+
+# -----------------------------------
+# GET REFLECTION MEMORY
+# -----------------------------------
+
+def get_reflection_memory():
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            reflection_text,
+            recorded_at
+        FROM reflection_memory
+        ORDER BY recorded_at DESC
+        LIMIT 5
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    connection.close()
+
+    reflection_history = []
+
+    for row in rows:
+
+        reflection_history.append({
+
+            "reflection_text": row[0],
+
+            "recorded_at": row[1]
+        })
+
+    return reflection_history
+
+
+# -----------------------------------
+# CLEAR MEMORY TABLES
+# -----------------------------------
+
+def clear_memory():
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "DELETE FROM historical_trends"
+    )
+
+    cursor.execute(
+        "DELETE FROM strategy_memory"
+    )
+
+    cursor.execute(
+        "DELETE FROM reflection_memory"
+    )
+
+    connection.commit()
+
+    connection.close()
+
+    print("MEMORY CLEARED")

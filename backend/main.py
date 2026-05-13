@@ -1,19 +1,53 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import (
+    FastAPI,
+    UploadFile,
+    File
+)
+
+from fastapi.middleware.cors import (
+    CORSMiddleware
+)
+
 from pydantic import BaseModel
-from fastapi import UploadFile, File
 
 import shutil
+import os
+import time
 
-from backend.crew import run_ftio_analysis
+from backend.crew import (
+    run_ftio_analysis
+)
 
 from backend.services.copilot_engine import (
     generate_copilot_response
 )
 
+from backend.tools.load_inventory import (
+    initialize_inventory
+)
+
+from backend.services.database import (
+    initialize_database
+)
+
+# -----------------------------------
+# INITIALIZE DATABASE
+# -----------------------------------
+
+initialize_database()
+
+# -----------------------------------
+# INITIALIZE INVENTORY CACHE
+# -----------------------------------
+
+initialize_inventory()
+
+# -----------------------------------
+# FASTAPI APP
+# -----------------------------------
+
 app = FastAPI(
     title="FTIO API",
-    description="Fashion Trend & Inventory Optimizer",
     version="1.0.0"
 )
 
@@ -22,80 +56,78 @@ app = FastAPI(
 # -----------------------------------
 
 app.add_middleware(
+
     CORSMiddleware,
+
     allow_origins=["*"],
+
     allow_credentials=True,
+
     allow_methods=["*"],
-    allow_headers=["*"],
+
+    allow_headers=["*"]
 )
 
 # -----------------------------------
-# REQUEST MODEL
+# CHAT REQUEST MODEL
 # -----------------------------------
 
 class ChatRequest(BaseModel):
+
     message: str
+
 
 # -----------------------------------
 # ROOT
 # -----------------------------------
 
 @app.get("/")
-def root():
+async def root():
 
     return {
-        "message": "FTIO Backend Running"
+
+        "message":
+        "FTIO API Running"
     }
+
 
 # -----------------------------------
 # HEALTH CHECK
 # -----------------------------------
 
 @app.get("/health")
-def health():
+async def health_check():
 
     return {
-        "status": "healthy"
+
+        "status": "healthy",
+
+        "service": "FTIO Backend"
     }
 
-# -----------------------------------
-# COPILOT CHAT ENDPOINT
-# -----------------------------------
-
-@app.post("/chat")
-async def chat_with_ftio(
-    request: ChatRequest
-):
-
-    response = generate_copilot_response(
-        request.message
-    )
-
-    return {
-        "response": response
-    }
 
 # -----------------------------------
-# ANALYZE
-# -----------------------------------
-
-@app.post("/analyze")
-def analyze():
-
-    return run_ftio_analysis()
-
-# -----------------------------------
-# CSV UPLOAD
+# UPLOAD INVENTORY
 # -----------------------------------
 
 @app.post("/upload")
-def upload_inventory(
+async def upload_inventory(
     file: UploadFile = File(...)
 ):
 
-    save_path = f"backend/data/{file.filename}"
+    save_path = (
+        "backend/data/current_inventory.csv"
+    )
 
-    with open(save_path, "wb") as buffer:
+    os.makedirs(
+        "backend/data",
+        exist_ok=True
+    )
+
+    with open(
+        save_path,
+        "wb"
+    ) as buffer:
 
         shutil.copyfileobj(
             file.file,
@@ -103,25 +135,86 @@ def upload_inventory(
         )
 
     return {
-        "status": "uploaded",
-        "filename": file.filename
+
+        "message":
+        "Inventory uploaded successfully.",
+
+        "file_path":
+        save_path
     }
 
+
 # -----------------------------------
-# GET REPORT
+# RUN FTIO ANALYSIS
 # -----------------------------------
 
-@app.get("/report")
-def get_report():
+@app.post("/analyze")
+async def analyze_inventory():
 
-    with open(
-        "backend/reports/final_report.md",
-        "r",
-        encoding="utf-8"
-    ) as file:
+    try:
 
-        content = file.read()
+        try:
 
-    return {
-        "report": content
-    }
+            results = run_ftio_analysis()
+
+        except Exception as e:
+
+            if "rate_limit" in str(e).lower():
+
+                print("RATE LIMIT HIT — RETRYING")
+
+                time.sleep(15)
+
+                results = run_ftio_analysis()
+
+            else:
+
+                raise e
+
+        return results
+
+    except Exception as error:
+
+        print("ANALYSIS ERROR:")
+
+        print(str(error))
+
+        return {
+
+            "error": str(error)
+        }
+
+
+# -----------------------------------
+# FTIO COPILOT CHAT
+# -----------------------------------
+
+@app.post("/chat")
+async def chat_with_ftio(
+    request: ChatRequest
+):
+
+    try:
+
+        response = (
+            generate_copilot_response(
+                request.message
+            )
+        )
+
+        return {
+
+            "response": response
+        }
+
+    except Exception as error:
+
+        print("COPILOT ERROR:")
+
+        print(str(error))
+
+        return {
+            "status": "error",
+
+            "error": str(error)
+        }

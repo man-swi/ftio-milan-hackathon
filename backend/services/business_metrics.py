@@ -7,8 +7,10 @@ from backend.services.scenario_engine import (
 
 def calculate_business_metrics(
     trends,
-    inventory_df
+    inventory_data
 ):
+
+    print("BUSINESS METRICS STARTED")
 
     metrics = {
 
@@ -24,9 +26,7 @@ def calculate_business_metrics(
 
         "inventory_alerts": [],
 
-        "simulation_results": [],
-
-        "risk_summary": []
+        "simulation_results": []
     }
 
     total_revenue = 0
@@ -34,6 +34,10 @@ def calculate_business_metrics(
     total_risk = 0
 
     total_confidence = 0
+
+    # -----------------------------------
+    # PROCESS TRENDS
+    # -----------------------------------
 
     for trend in trends:
 
@@ -50,29 +54,36 @@ def calculate_business_metrics(
 
         total_confidence += confidence
 
-        volatility_score = round(
-            (1 - confidence) * 100,
-            2
-        )
+        matched_items = []
 
-        matched_items = inventory_df[
-            inventory_df["category"].str.lower()
-            ==
-            category.lower()
-        ]
+        for item in inventory_data:
 
-        for _, item in matched_items.iterrows():
+            if (
 
-            stock = int(item["stock"])
+                item["category"]
+                .lower()
 
-            unit_price = float(
-                item["unit_price"]
-            )
+                ==
+
+                category.lower()
+            ):
+
+                matched_items.append(item)
+
+        # -----------------------------------
+        # PROCESS MATCHED ITEMS
+        # -----------------------------------
+
+        for item in matched_items:
+
+            stock = item["stock"]
+
+            unit_price = item["unit_price"]
 
             product_name = item["product_name"]
 
             # -----------------------------------
-            # RESTOCK SIMULATION
+            # RESTOCK
             # -----------------------------------
 
             restock_result = simulate_restock(
@@ -81,7 +92,7 @@ def calculate_business_metrics(
             )
 
             # -----------------------------------
-            # OVERSTOCK SIMULATION
+            # OVERSTOCK
             # -----------------------------------
 
             overstock_result = (
@@ -92,7 +103,7 @@ def calculate_business_metrics(
             )
 
             # -----------------------------------
-            # PROFIT SIMULATION
+            # PROFIT
             # -----------------------------------
 
             profit_result = (
@@ -152,22 +163,21 @@ def calculate_business_metrics(
 
                     "current_stock": stock,
 
-                    "recommended_stock": recommended_stock,
+                    "recommended_stock":
+                    recommended_stock,
 
-                    "missing_units": missing_units,
+                    "missing_units":
+                    missing_units,
 
-                    "revenue_opportunity": round(
+                    "revenue_opportunity":
+                    round(
                         revenue_opportunity,
                         2
                     ),
 
-                    "priority": restock_result[
-                        "risk"
-                    ],
-
-                    "sellout_probability":
+                    "priority":
                     restock_result[
-                        "sellout_probability"
+                        "stockout_risk"
                     ]
                 })
 
@@ -197,24 +207,28 @@ def calculate_business_metrics(
 
                     "current_stock": stock,
 
-                    "recommended_stock": recommended_stock,
+                    "recommended_stock":
+                    recommended_stock,
 
-                    "excess_units": excess_units,
+                    "excess_units":
+                    excess_units,
 
-                    "overstock_cost": round(
+                    "overstock_cost":
+                    round(
                         overstock_cost,
                         2
                     ),
 
-                    "priority": "MEDIUM",
-
-                    "markdown_probability":
-                    overstock_result[
-                        "markdown_probability"
-                    ]
+                    "priority": "MEDIUM"
                 })
 
-        metrics["trend_insights"].append({
+        # -----------------------------------
+        # TREND INSIGHTS
+        # -----------------------------------
+
+        metrics[
+            "trend_insights"
+        ].append({
 
             "trend": trend_name,
 
@@ -222,8 +236,10 @@ def calculate_business_metrics(
 
             "confidence": confidence,
 
-            "volatility_score":
-            volatility_score,
+            "volatility_score": round(
+                (1 - confidence) * 100,
+                2
+            ),
 
             "peak_prediction_days":
             trend.get(
@@ -235,13 +251,16 @@ def calculate_business_metrics(
     metrics[
         "top_trend_momentum"
     ] = max(
+
         [t["momentum"] for t in trends]
     )
 
     metrics[
         "average_confidence"
     ] = round(
+
         total_confidence / len(trends),
+
         2
     )
 
@@ -258,5 +277,7 @@ def calculate_business_metrics(
         total_risk,
         2
     )
+
+    print("BUSINESS METRICS FINISHED")
 
     return metrics

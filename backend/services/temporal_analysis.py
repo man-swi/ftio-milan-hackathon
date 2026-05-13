@@ -18,6 +18,10 @@ def calculate_momentum_acceleration(
         )
     )
 
+    # -----------------------------------
+    # NO PREVIOUS HISTORY
+    # -----------------------------------
+
     if previous_data is None:
 
         return {
@@ -30,12 +34,30 @@ def calculate_momentum_acceleration(
             "momentum_change": 0,
 
             "acceleration_label":
+            "NEW TREND",
+
+            "trend_status":
             "NEW TREND"
         }
+
+    # -----------------------------------
+    # HISTORICAL VALUES
+    # -----------------------------------
 
     previous_momentum = (
         previous_data["momentum"]
     )
+
+    previous_confidence = (
+        previous_data.get(
+            "confidence",
+            None
+        )
+    )
+
+    # -----------------------------------
+    # MOMENTUM DELTA
+    # -----------------------------------
 
     momentum_change = round(
         (
@@ -48,12 +70,22 @@ def calculate_momentum_acceleration(
         2
     )
 
+    # -----------------------------------
+    # TREND LABELS
+    # -----------------------------------
+
     acceleration_label = "STABLE"
+
+    trend_status = "STABLE"
 
     if momentum_change >= 25:
 
         acceleration_label = (
             "HIGH ACCELERATION"
+        )
+
+        trend_status = (
+            "ACCELERATING"
         )
 
     elif momentum_change >= 10:
@@ -62,11 +94,53 @@ def calculate_momentum_acceleration(
             "RISING"
         )
 
-    elif momentum_change <= -15:
+        trend_status = (
+            "RISING"
+        )
+
+    elif momentum_change <= -20:
+
+        acceleration_label = (
+            "SHARP DECLINE"
+        )
+
+        trend_status = (
+            "DECLINING"
+        )
+
+    elif momentum_change <= -10:
 
         acceleration_label = (
             "DECLINING"
         )
+
+        trend_status = (
+            "DECLINING"
+        )
+
+    # -----------------------------------
+    # VOLATILITY SCORE
+    # -----------------------------------
+
+    volatility_score = round(
+        abs(momentum_change) * 1.5,
+        2
+    )
+
+    # -----------------------------------
+    # CONFIDENCE SHIFT
+    # -----------------------------------
+
+    confidence_shift = (
+        calculate_confidence_shift(
+            current_confidence=current_momentum,
+            previous_confidence=previous_confidence
+        )
+    )
+
+    # -----------------------------------
+    # FINAL OUTPUT
+    # -----------------------------------
 
     return {
 
@@ -80,7 +154,16 @@ def calculate_momentum_acceleration(
         momentum_change,
 
         "acceleration_label":
-        acceleration_label
+        acceleration_label,
+
+        "trend_status":
+        trend_status,
+
+        "volatility_score":
+        volatility_score,
+
+        "confidence_shift":
+        confidence_shift
     }
 
 
@@ -107,7 +190,7 @@ def calculate_confidence_shift(
 
 
 # -----------------------------------
-# RISK GROWTH
+# STOCKOUT RISK GROWTH
 # -----------------------------------
 
 def detect_risk_growth(

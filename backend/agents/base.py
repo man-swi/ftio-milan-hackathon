@@ -1,10 +1,27 @@
+from crewai import LLM
 from groq import Groq
+
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Groq(
+# -----------------------------------
+# CREWAI LLM
+# -----------------------------------
+
+groq_llm = LLM(
+    model="groq/llama-3.1-8b-instant",
+    api_key=os.getenv("GROQ_API_KEY"),
+    temperature=0.3,
+    max_tokens=500
+)
+
+# -----------------------------------
+# DIRECT GROQ CLIENT
+# -----------------------------------
+
+groq_client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
@@ -16,7 +33,7 @@ def generate_groq_response(
     prompt
 ):
 
-    completion = client.chat.completions.create(
+    completion = groq_client.chat.completions.create(
 
         model="llama-3.1-8b-instant",
 
@@ -28,7 +45,7 @@ def generate_groq_response(
         ],
 
         temperature=0.4,
-        max_tokens=1000
+        max_tokens=500
     )
 
     return completion.choices[0].message.content

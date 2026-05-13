@@ -1,59 +1,79 @@
 [
   {
-    "trend": "coquette aesthetic",
-    "momentum": 0.97,
-    "confidence": 0.93,
+    "trend": "Coquette Aesthetic",
+    "momentum": 0.91,
+    "confidence": 0.88,
+    "category": "tops",
     "hashtags": [
       "#coquette",
       "#bows",
-      "#hyperfeminine"
+      "#femininefashion"
     ],
-    "category": "tops",
-    "peak_prediction_days": 10
-  },
-  {
-    "trend": "gorpcore",
-    "momentum": 0.71,
-    "confidence": 0.74,
-    "hashtags": [
-      "#gorpcore",
-      "#technicalwear"
-    ],
-    "category": "jackets",
     "peak_prediction_days": 14
   },
+
   {
-    "trend": "quiet luxury",
-    "momentum": 0.88,
-    "confidence": 0.94,
+    "trend": "Quiet Luxury",
+    "momentum": 0.78,
+    "confidence": 0.90,
+    "category": "blazers",
     "hashtags": [
       "#quietluxury",
-      "#oldmoney"
+      "#oldmoney",
+      "#minimalstyle"
     ],
-    "category": "blazers",
-    "peak_prediction_days": 45
+    "peak_prediction_days": 30
   },
+
   {
-    "trend": "cargo revival",
-    "momentum": 0.49,
-    "confidence": 0.58,
+    "trend": "Gorpcore",
+    "momentum": 0.84,
+    "confidence": 0.81,
+    "category": "outerwear",
     "hashtags": [
-      "#streetwear",
-      "#cargo"
+      "#gorpcore",
+      "#utilitywear",
+      "#techwear"
     ],
+    "peak_prediction_days": 21
+  },
+
+  {
+    "trend": "Cargo Revival",
+    "momentum": 0.65,
+    "confidence": 0.72,
     "category": "pants",
-    "peak_prediction_days": 8
-  },
-  {
-    "trend": "mob wife aesthetic",
-    "momentum": 0.92,
-    "confidence": 0.87,
     "hashtags": [
-      "#mobwife",
-      "#fauxfur",
-      "#maximalism"
+      "#cargopants",
+      "#streetwear",
+      "#urbanfashion"
     ],
-    "category": "jackets",
-    "peak_prediction_days": 16
+    "peak_prediction_days": 18
+  },
+
+  {
+    "trend": "Soft Knit Minimalism",
+    "momentum": 0.74,
+    "confidence": 0.83,
+    "category": "knitwear",
+    "hashtags": [
+      "#softminimal",
+      "#knitwear",
+      "#capsulewardrobe"
+    ],
+    "peak_prediction_days": 26
+  },
+
+  {
+    "trend": "Romantic Academia",
+    "momentum": 0.69,
+    "confidence": 0.79,
+    "category": "bottoms",
+    "hashtags": [
+      "#academia",
+      "#vintagestyle",
+      "#romanticfashion"
+    ],
+    "peak_prediction_days": 24
   }
 ]
