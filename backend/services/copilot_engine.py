@@ -30,6 +30,18 @@ from backend.agents.base import (
 
 
 # -----------------------------------
+# TOKEN BUDGET CONSTANTS
+# -----------------------------------
+
+TOKEN_BUDGET = {
+    "max_simulations":      3,
+    "max_evidence_chains":  3,
+    "max_traces":           2,
+    "max_alerts":           2,
+}
+
+
+# -----------------------------------
 # BUILD INVENTORY SUMMARY
 # -----------------------------------
 
@@ -245,6 +257,70 @@ def build_executive_priorities(
 
 
 # -----------------------------------
+# BUILD COMPRESSED COPILOT CONTEXT
+# -----------------------------------
+
+def build_compressed_copilot_context(
+    simulation_summary,
+    memory_summary,
+    business_metrics
+):
+
+    return {
+
+        "top_opportunities": [
+            {
+                "product": s["product"],
+                "revenue": s["revenue"],
+                "trend": s["trend"],
+                "sellout_probability": (
+                    f"{round(s['sellout_probability'] * 100)}%"
+                )
+            }
+            for s in simulation_summary[:3]
+        ],
+
+        "top_risks": [
+            {
+                "product": s["product"],
+                "inventory_risk": s["inventory_risk"],
+                "overstock_risk": s["overstock_risk"]
+            }
+            for s in simulation_summary
+            if s["inventory_risk"] in [
+                "High", "Critical"
+            ]
+        ][:3],
+
+        "top_consensus": {
+            "revenue_opportunity": (
+                business_metrics[
+                    "total_revenue_opportunity"
+                ]
+            ),
+            "inventory_risk": (
+                business_metrics[
+                    "total_inventory_risk"
+                ]
+            ),
+            "confidence": (
+                business_metrics[
+                    "average_confidence"
+                ]
+            )
+        },
+
+        "key_trends": [
+            {
+                "trend": m["trend"],
+                "momentum": m["momentum"]
+            }
+            for m in memory_summary[:3]
+        ]
+    }
+
+
+# -----------------------------------
 # BUILD RESPONSE STYLE RULES
 # -----------------------------------
 
@@ -289,7 +365,80 @@ def build_response_rules():
     - Avoid long introductions
     - Avoid unnecessary trend storytelling
     """
-    
+
+
+# -----------------------------------
+# STEP 4 — TOKEN BUDGETING
+# Limits evidence chains, traces,
+# simulations, and alerts before
+# they are injected into the prompt.
+# -----------------------------------
+
+def apply_token_budget(
+    simulation_summary,
+    retrieved_context,
+    memory_summary,
+    executive_priorities_list
+):
+
+    # --- Limit simulations ---
+    # Keep only the top N simulations
+    # ranked by revenue (already sorted).
+    budgeted_simulations = (
+        simulation_summary[
+            :TOKEN_BUDGET["max_simulations"]
+        ]
+    )
+
+    # --- Limit evidence chains ---
+    # RAG context is treated as a list of
+    # evidence chunks. Slice to max allowed.
+    if isinstance(retrieved_context, list):
+        budgeted_evidence = (
+            retrieved_context[
+                :TOKEN_BUDGET["max_evidence_chains"]
+            ]
+        )
+    else:
+        # If context is a raw string, split
+        # by double-newline and re-join after
+        # slicing to the allowed limit.
+        evidence_chunks = [
+            chunk.strip()
+            for chunk in retrieved_context.split("\n\n")
+            if chunk.strip()
+        ]
+        budgeted_evidence = "\n\n".join(
+            evidence_chunks[
+                :TOKEN_BUDGET["max_evidence_chains"]
+            ]
+        )
+
+    # --- Limit traces ---
+    # Memory trends act as historical
+    # traces. Cap at max_traces.
+    budgeted_traces = (
+        memory_summary[
+            :TOKEN_BUDGET["max_traces"]
+        ]
+    )
+
+    # --- Limit alerts ---
+    # Executive priorities act as alerts.
+    # Keep only the top N by revenue impact.
+    budgeted_alerts = (
+        executive_priorities_list[
+            :TOKEN_BUDGET["max_alerts"]
+        ]
+    )
+
+    return (
+        budgeted_simulations,
+        budgeted_evidence,
+        budgeted_traces,
+        budgeted_alerts
+    )
+
 
 # -----------------------------------
 # GENERATE COPILOT RESPONSE
@@ -371,8 +520,58 @@ def generate_copilot_response(
 
         print("STEP 10")
 
+        compressed_context = (
+            build_compressed_copilot_context(
+                simulation_summary,
+                memory_summary,
+                business_metrics
+            )
+        )
+
         response_rules = (
             build_response_rules()
+        )
+
+        # -----------------------------------
+        # STEP 4 — APPLY TOKEN BUDGETING
+        # Trim all prompt inputs before
+        # injection to stay within limits.
+        # -----------------------------------
+
+        print("STEP 4 — TOKEN BUDGETING")
+
+        executive_priorities_list = (
+            simulation_summary
+        )
+
+        (
+            budgeted_simulations,
+            budgeted_evidence,
+            budgeted_traces,
+            budgeted_alerts
+        ) = apply_token_budget(
+            simulation_summary,
+            retrieved_context,
+            memory_summary,
+            executive_priorities_list
+        )
+
+        # Rebuild compressed context and
+        # executive priorities from the
+        # budgeted (trimmed) data only.
+
+        compressed_context = (
+            build_compressed_copilot_context(
+                budgeted_simulations,
+                budgeted_traces,
+                business_metrics
+            )
+        )
+
+        executive_priorities = (
+            build_executive_priorities(
+                budgeted_alerts
+            )
         )
 
         # -----------------------------------
@@ -412,22 +611,16 @@ def generate_copilot_response(
         {executive_priorities}
 
         ===================================
-        INVENTORY SNAPSHOT
+        COMPRESSED EXECUTIVE CONTEXT
         ===================================
 
-        {inventory_summary}
-
-        ===================================
-        TEMPORAL TREND MEMORY
-        ===================================
-
-        {memory_summary}
+        {compressed_context}
 
         ===================================
         RETAIL KNOWLEDGE
         ===================================
 
-        {retrieved_context}
+        {budgeted_evidence}
 
         ===================================
         RESPONSE RULES

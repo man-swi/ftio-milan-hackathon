@@ -11,7 +11,7 @@ load_dotenv()
 # -----------------------------------
 
 groq_llm = LLM(
-    model="groq/llama3-70b-8192",
+    model="groq/llama-3.3-70b-versatile",
     api_key=os.getenv("GROQ_API_KEY"),
     temperature=0.3,
     max_tokens=350
@@ -35,7 +35,7 @@ def generate_groq_response(
 
     completion = groq_client.chat.completions.create(
 
-        model="llama-3.1-8b-instant",
+        model="llama-3.3-70b-versatile",
 
         messages=[
             {

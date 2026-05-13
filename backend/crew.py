@@ -132,6 +132,45 @@ def run_ftio_analysis():
             ]
         })
 
+    # -----------------------------------
+    # COMPRESSED CREW CONTEXT
+    # -----------------------------------
+
+    compressed_context = {
+
+        "top_opportunities": [
+            f"Revenue Opportunity: ${business_metrics['total_revenue_opportunity']}",
+            *[
+                f"{i['trend']} — Accelerating ({i['momentum_change']}% change)"
+                for i in temporal_insights
+                if i["acceleration_label"] == "Accelerating"
+            ]
+        ],
+
+        "top_risks": [
+            f"Inventory Risk: ${business_metrics['total_inventory_risk']}",
+            *[
+                f"{i['trend']} — Volatility Score: {i['volatility_score']}"
+                for i in temporal_insights
+                if i["volatility_score"] > 0.5
+            ]
+        ],
+
+        "top_consensus": [
+            f"Average Confidence: {business_metrics['average_confidence']}",
+            *[
+                f"{i['trend']} — {i['acceleration_label']}"
+                for i in temporal_insights
+            ]
+        ],
+
+        "key_conflicts": [
+            f"{i['trend']} — momentum dropped {i['momentum_change']}% (was {i['previous_momentum']}, now {i['current_momentum']})"
+            for i in temporal_insights
+            if i["acceleration_label"] in ["Decelerating", "Volatile"]
+        ]
+    }
+
     # ===================================
     # TREND ANALYSIS TASK
     # ===================================
@@ -229,8 +268,8 @@ def run_ftio_analysis():
         Retail Intelligence:
         {retrieved_knowledge}
 
-        Temporal Intelligence:
-        {temporal_insights}
+        Compressed Business Context:
+        {compressed_context}
 
         IMPORTANT:
 
@@ -331,6 +370,9 @@ def run_ftio_analysis():
         description=f"""
         Synthesize all agent outputs into
         one final executive decision framework.
+
+        Compressed Business Context:
+        {compressed_context}
 
         IMPORTANT:
 
