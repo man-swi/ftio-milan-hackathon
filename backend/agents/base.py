@@ -11,10 +11,10 @@ load_dotenv()
 # -----------------------------------
 
 groq_llm = LLM(
-    model="groq/llama-3.1-8b-instant",
+    model="groq/llama3-70b-8192",
     api_key=os.getenv("GROQ_API_KEY"),
     temperature=0.3,
-    max_tokens=500
+    max_tokens=350
 )
 
 # -----------------------------------
@@ -45,7 +45,7 @@ def generate_groq_response(
         ],
 
         temperature=0.4,
-        max_tokens=500
+        max_tokens=350
     )
 
     return completion.choices[0].message.content

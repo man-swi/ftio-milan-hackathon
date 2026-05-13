@@ -1,5 +1,17 @@
 import math
 
+from backend.services.explainability_engine import (
+    generate_recommendation_explanation,
+    generate_confidence_explanation,
+    generate_financial_explanation,
+    generate_risk_explanation,
+    generate_agent_decision_trace
+)
+
+from backend.services.temporal_analysis import (
+    calculate_momentum_acceleration
+)
+
 
 # -----------------------------------
 # SALES VELOCITY MULTIPLIERS
@@ -193,6 +205,19 @@ def simulate_restock(
     )
 
     # -----------------------------------
+    # TEMPORAL INTELLIGENCE
+    # -----------------------------------
+
+    temporal_data = (
+        calculate_momentum_acceleration(
+
+            trend["trend"],
+            momentum
+
+        )
+    )
+
+    # -----------------------------------
     # DEMAND FORECAST
     # -----------------------------------
 
@@ -354,10 +379,10 @@ def simulate_restock(
         demand_label = "DECLINING"
 
     # -----------------------------------
-    # RETURN EXECUTIVE SIMULATION
+    # BASE SIMULATION RESULT
     # -----------------------------------
 
-    return {
+    simulation_result = {
 
         "product":
         inventory_item["product_name"],
@@ -419,6 +444,81 @@ def simulate_restock(
         "demand_label":
         demand_label
     }
+
+    # -----------------------------------
+    # EXPLAINABILITY LAYER
+    # -----------------------------------
+
+    recommendation_explanation = (
+        generate_recommendation_explanation(
+
+            trend,
+            simulation_result,
+            temporal_data
+        )
+    )
+
+    confidence_explanation = (
+        generate_confidence_explanation(
+
+            trend,
+            temporal_data,
+            simulation_result
+        )
+    )
+
+    financial_explanation = (
+        generate_financial_explanation(
+            simulation_result
+        )
+    )
+
+    risk_explanation = (
+        generate_risk_explanation(
+
+            simulation_result,
+            temporal_data
+        )
+    )
+
+    decision_trace = (
+        generate_agent_decision_trace(
+
+            trend,
+            simulation_result,
+            temporal_data
+        )
+    )
+
+    # -----------------------------------
+    # ATTACH EXPLAINABILITY
+    # -----------------------------------
+
+    simulation_result[
+        "decision_explanation"
+    ] = recommendation_explanation
+
+    simulation_result[
+        "confidence_explanation"
+    ] = confidence_explanation
+
+    simulation_result[
+        "financial_rationale"
+    ] = financial_explanation
+
+    simulation_result[
+        "risk_rationale"
+    ] = risk_explanation
+
+    simulation_result[
+        "decision_trace"
+    ] = decision_trace
+
+    # -----------------------------------
+    # FINAL RESULT
+    # -----------------------------------
+
+    return simulation_result
 
 
 # -----------------------------------
