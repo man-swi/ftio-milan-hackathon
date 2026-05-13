@@ -1470,16 +1470,314 @@ if st.session_state.analysis_data:
                 unsafe_allow_html=True
             )
 
-        # ===================================
-        # DOWNLOAD REPORT
-        # ===================================
+    # ===================================
+    # DOWNLOAD REPORT
+    # ===================================
 
-        st.download_button(
-            label="Download Executive Report",
-            data=report,
-            file_name="ftio_executive_report.md",
-            mime="text/markdown"
+    st.download_button(
+        label="Download Executive Report",
+        data=report,
+        file_name="ftio_executive_report.md",
+        mime="text/markdown"
+    )
+
+    # ===================================
+    # MONITORING CENTER TAB
+    # ===================================
+
+    with workspace_tabs[1]:
+
+        st.header("Live Monitoring Center")
+
+        monitoring_status = fetch_monitoring_status()
+        monitoring_alerts = fetch_monitoring_alerts()
+        executive_summaries = fetch_executive_summaries()
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                "Monitoring Status",
+                monitoring_status.get(
+                    "status",
+                    "ACTIVE"
+                )
+            )
+
+        with col2:
+            st.metric(
+                "Active Alerts",
+                len(monitoring_alerts)
+            )
+
+        with col3:
+            st.metric(
+                "Executive Summaries",
+                len(executive_summaries)
+            )
+
+        st.markdown("---")
+
+        st.subheader("Operational Alerts")
+
+        if monitoring_alerts:
+
+            for alert in reversed(
+                monitoring_alerts[-10:]
+            ):
+
+                severity = alert.get(
+                    "severity",
+                    "LOW"
+                )
+
+                alert_class = "alert-card-low"
+
+                if severity == "HIGH":
+                    alert_class = "alert-card-high"
+
+                elif severity == "MEDIUM":
+                    alert_class = "alert-card-medium"
+
+                st.markdown(f"""
+
+                <div class="{alert_class}">
+
+                <h4>{alert.get('title','Alert')}</h4>
+
+                <p>{alert.get('message','')}</p>
+
+                <p>
+                <b>Severity:</b>
+                {severity}
+                </p>
+
+                </div>
+
+                """, unsafe_allow_html=True)
+
+        else:
+
+            st.success(
+                "No active monitoring alerts."
+            )
+
+
+    # ===================================
+    # TREND INTELLIGENCE TAB
+    # ===================================
+
+    with workspace_tabs[2]:
+
+        st.header("Trend Intelligence")
+
+        trend_df = pd.DataFrame(
+            metrics.get("trend_insights", [])
         )
+
+        if not trend_df.empty:
+
+            st.dataframe(
+                trend_df,
+                width="stretch"
+            )
+
+            st.markdown("---")
+
+            fig = px.line(
+                trend_df,
+                x="trend",
+                y="momentum",
+                markers=True,
+                title="Trend Momentum Intelligence"
+            )
+
+            st.plotly_chart(
+                fig,
+                width="stretch"
+            )
+
+            fig2 = px.bar(
+                trend_df,
+                x="trend",
+                y="confidence",
+                color="trend",
+                title="Trend Confidence Mapping"
+            )
+
+            st.plotly_chart(
+                fig2,
+                width="stretch"
+            )
+
+        else:
+
+            st.warning(
+                "No trend intelligence available."
+            )
+
+    # ===================================
+    # DECISION INTELLIGENCE TAB
+    # ===================================
+
+    with workspace_tabs[4]:
+
+        st.header("Decision Intelligence")
+
+        simulation_results = metrics.get(
+            "simulation_results",
+            []
+        )
+
+        if simulation_results:
+
+            node_x = []
+            node_y = []
+            node_text = []
+
+            edge_x = []
+            edge_y = []
+
+            y_position = 0
+
+            for simulation in simulation_results:
+
+                product = simulation.get(
+                    "product",
+                    "Unknown"
+                )
+
+                trend = simulation.get(
+                    "trend",
+                    "Unknown"
+                )
+
+                restock = simulation.get(
+                    "restock",
+                    {}
+                )
+
+                recommendation = restock.get(
+                    "recommended_restock",
+                    0
+                )
+
+                node_x.extend([1, 2, 3])
+
+                node_y.extend([
+                    y_position,
+                    y_position,
+                    y_position
+                ])
+
+                node_text.extend([
+                    f"Trend: {trend}",
+                    f"Product: {product}",
+                    f"Restock: {recommendation}"
+                ])
+
+                edge_x.extend([
+                    1, 2, None,
+                    2, 3, None
+                ])
+
+                edge_y.extend([
+                    y_position,
+                    y_position,
+                    None,
+                    y_position,
+                    y_position,
+                    None
+                ])
+
+                y_position += 1
+
+            edge_trace = go.Scatter(
+                x=edge_x,
+                y=edge_y,
+                mode='lines',
+                hoverinfo='none'
+            )
+
+            node_trace = go.Scatter(
+                x=node_x,
+                y=node_y,
+                mode='markers+text',
+                text=node_text,
+                textposition="top center",
+                marker=dict(size=28)
+            )
+
+            fig = go.Figure(
+                data=[edge_trace, node_trace]
+            )
+
+            fig.update_layout(
+                title="FTIO Decision Intelligence Graph",
+                showlegend=False,
+                height=700
+            )
+
+            st.plotly_chart(
+                fig,
+                width="stretch"
+            )
+
+
+    # ===================================
+    # BOARDROOM VIEW TAB
+    # ===================================
+
+    with workspace_tabs[6]:
+
+        st.header("Boardroom Executive View")
+
+        st.markdown("""
+
+        ## Executive Summary
+
+        FTIO identified high-opportunity
+        inventory acceleration patterns across
+        multiple fashion categories.
+
+        Key operational concerns include:
+
+        - understock exposure
+        - inventory imbalance
+        - demand acceleration
+        - risk concentration
+
+        Executive recommendation:
+        prioritize high-confidence trend-aligned inventory allocation.
+
+        """)
+
+        st.markdown("---")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.metric(
+                "Projected Revenue",
+                f"${metrics.get('total_revenue_opportunity',0):,.0f}"
+            )
+
+        with col2:
+            st.metric(
+                "Inventory Risk",
+                f"${metrics.get('total_inventory_risk',0):,.0f}"
+            )
+
+        with col3:
+            st.metric(
+                "Consensus Strength",
+                safe_percentage(
+                    metrics.get(
+                        "average_consensus_score",
+                        0
+                    )
+                )
+            )
 
 # ===================================
 # EXECUTIVE COPILOT TAB
