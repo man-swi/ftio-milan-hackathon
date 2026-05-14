@@ -150,7 +150,7 @@ Executive trend intelligence:
 
 # Inventory Intelligence
 
-Executive Inventory Intelligence:
+Executive inventory intelligence:
 * Highest inventory risk: SKU104
 * Highest stockout risk: SKU101
 * Highest revenue opportunity: tops

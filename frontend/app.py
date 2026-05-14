@@ -981,7 +981,7 @@ if uploaded_file is not None:
 
     st.dataframe(
         preview_df,
-        width="stretch",
+        use_container_width=True,
         height=240
     )
 
@@ -1239,7 +1239,7 @@ if st.session_state.analysis_data:
 
                 st.plotly_chart(
                     fig,
-                    width="stretch"
+                    use_container_width=True
                 )
 
             with col2:
@@ -1255,7 +1255,7 @@ if st.session_state.analysis_data:
 
                 st.plotly_chart(
                     fig2,
-                    width="stretch"
+                    use_container_width=True
                 )
 
     # ===================================
@@ -1579,7 +1579,7 @@ if st.session_state.analysis_data:
 
             st.dataframe(
                 trend_df,
-                width="stretch"
+                use_container_width=True
             )
 
             st.markdown("---")
@@ -1594,7 +1594,7 @@ if st.session_state.analysis_data:
 
             st.plotly_chart(
                 fig,
-                width="stretch"
+                use_container_width=True
             )
 
             fig2 = px.bar(
@@ -1607,7 +1607,7 @@ if st.session_state.analysis_data:
 
             st.plotly_chart(
                 fig2,
-                width="stretch"
+                use_container_width=True
             )
 
         else:
@@ -1720,7 +1720,7 @@ if st.session_state.analysis_data:
 
             st.plotly_chart(
                 fig,
-                width="stretch"
+                use_container_width=True
             )
 
 
