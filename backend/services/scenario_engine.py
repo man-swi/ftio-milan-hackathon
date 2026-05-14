@@ -1,5 +1,9 @@
 import math
 
+from backend.ml.forecasting_engine import (
+    forecasting_engine
+)
+
 from backend.services.explainability_engine import (
     generate_recommendation_explanation,
     generate_confidence_explanation,
@@ -11,6 +15,13 @@ from backend.services.explainability_engine import (
 from backend.services.temporal_analysis import (
     calculate_momentum_acceleration
 )
+
+
+# -----------------------------------
+# INITIALIZE ML FORECASTING ENGINE
+# -----------------------------------
+
+forecasting_engine.run_pipeline()
 
 
 # -----------------------------------
@@ -45,6 +56,51 @@ SEASONAL_MULTIPLIERS = {
 
     "bottoms": 0.95
 }
+
+
+# -----------------------------------
+# ML-POWERED DEMAND PREDICTION
+# -----------------------------------
+
+def predict_inventory_demand(
+    trend_score,
+    stock,
+    unit_price,
+    sales_velocity
+):
+
+    velocity_map = {
+        "low": 1,
+        "medium": 2,
+        "high": 3
+    }
+
+    velocity_encoded = (
+        velocity_map.get(
+            sales_velocity.lower(),
+            2
+        )
+    )
+
+    estimated_units_sold = (
+        stock * velocity_encoded
+    )
+
+    prediction = (
+        forecasting_engine
+        .predict_future_demand(
+            {
+                "trend_score": trend_score,
+                "units_sold": estimated_units_sold,
+                "unit_price": unit_price,
+                "stock": stock,
+                "sales_velocity_encoded":
+                    velocity_encoded
+            }
+        )
+    )
+
+    return prediction
 
 
 # -----------------------------------
@@ -221,30 +277,35 @@ def simulate_restock(
     # DEMAND FORECAST
     # -----------------------------------
 
-    projected_demand = int(
-
-        (
-            trend_strength *
-            velocity_multiplier *
-            seasonal_multiplier *
-            demand_window
-        ) * 5
-
+    # Calculate trend score for ML model
+    trend_score = int(
+        trend_strength * 100
     )
 
+    # Use ML forecasting for predicted demand
+    predicted_future_demand = (
+        predict_inventory_demand(
+            trend_score=trend_score,
+            stock=current_stock,
+            unit_price=unit_price,
+            sales_velocity=sales_velocity
+        )
+    )
+
+    # Recommended restock based on ML prediction
     recommended_restock = max(
-
-        projected_demand
-        -
-        current_stock,
-
+        int(predicted_future_demand - current_stock),
         0
     )
 
     target_inventory = (
-        current_stock
-        +
+        current_stock +
         recommended_restock
+    )
+
+    # Project demand for temporal analysis
+    projected_demand = int(
+        predicted_future_demand
     )
 
     # -----------------------------------
@@ -395,6 +456,9 @@ def simulate_restock(
 
         "trend_strength":
         trend_strength,
+
+        "predicted_future_demand":
+        round(predicted_future_demand, 2),
 
         "recommended_restock":
         recommended_restock,
