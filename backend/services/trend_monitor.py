@@ -1,201 +1,95 @@
-import json
-
 from datetime import datetime
 
-from backend.services.memory_engine import (
-    retrieve_previous_trend_data
+from backend.services.data_engine import (
+    data_engine
 )
 
-from backend.services.temporal_analysis import (
-    calculate_momentum_acceleration
-)
-
-
-# ===================================
-# LOAD CURRENT TRENDS
-# ===================================
 
 def load_current_trends():
 
-    with open(
+    if data_engine.trend_df is None:
 
-        "backend/data/mock_trends.json",
+        data_engine.load_trend_data()
 
-        "r"
+    return data_engine.trend_df
 
-    ) as file:
-
-        return json.load(file)
-
-
-# ===================================
-# TREND SPIKE DETECTION
-# ===================================
 
 def detect_trend_spikes():
 
-    trends = load_current_trends()
+    trend_df = load_current_trends()
 
     alerts = []
 
-    # ===================================
-    # PROCESS TRENDS
-    # ===================================
+    # Sort by trend score and keep only top 10 signals
+    top_trends = trend_df.sort_values(
+        by="normalized_trend_score",
+        ascending=False
+    ).head(10)
 
-    for trend in trends:
+    for _, row in top_trends.iterrows():
 
-        trend_name = trend.get(
-            "trend",
-            "Unknown Trend"
-        )
-
-        current_momentum = trend.get(
-            "momentum",
+        trend_score = row.get(
+            "trend_score",
             0
         )
 
-        confidence = trend.get(
-            "confidence",
-            0
+        trend_strength = row.get(
+            "trend_strength",
+            "STABLE"
         )
 
-        previous_data = (
-            retrieve_previous_trend_data(
-                trend_name
-            )
+        product_name = row.get(
+            "product_name",
+            "Unknown Product"
         )
 
-        if previous_data:
+        category = row.get(
+            "category",
+            "Unknown Category"
+        )
 
-            previous_momentum = (
-                previous_data.get(
-                    "momentum",
-                    current_momentum
+        if (
+            trend_strength == "EXPLOSIVE"
+            and trend_score >= 95
+        ):
+
+            alert = {
+                "timestamp": str(datetime.now()),
+                "type": "TREND_SPIKE",
+                "product": product_name,
+                "category": category,
+                "trend_score": trend_score,
+                "severity": "HIGH",
+                "message": (
+                    f"{product_name} trend momentum "
+                    f"reached explosive levels."
                 )
-            )
+            }
 
-        else:
+            alerts.append(alert)
 
-            previous_momentum = (
-                current_momentum
-            )
+        elif trend_strength == "ACCELERATING":
 
-        # ===================================
-        # CALCULATE CHANGE
-        # ===================================
+            alert = {
+                "timestamp": str(datetime.now()),
+                "type": "TREND_ACCELERATION",
+                "product": product_name,
+                "category": category,
+                "trend_score": trend_score,
+                "severity": "MEDIUM",
+                "message": (
+                    f"{product_name} trend is accelerating."
+                )
+            }
 
-        momentum_change = round(
+            alerts.append(alert)
 
-            (
-                current_momentum -
-                previous_momentum
-            ) * 100,
+    if alerts:
 
-            2
-        )
+        print(f"Detected {len(alerts)} trend anomalies.")
 
-        # ===================================
-        # ACCELERATION ALERT
-        # ===================================
+    else:
 
-        if momentum_change >= 10:
-
-            alerts.append({
-
-                "timestamp":
-                str(datetime.now()),
-
-                "type":
-                "TREND_SPIKE",
-
-                "trend":
-                trend_name,
-
-                "severity":
-                "HIGH",
-
-                "message":
-
-                f"{trend_name} momentum "
-
-                f"increased "
-
-                f"{momentum_change}% "
-
-                f"in the latest "
-
-                f"monitoring cycle.",
-
-                "confidence":
-                confidence
-            })
-
-        # ===================================
-        # TREND WEAKENING
-        # ===================================
-
-        elif momentum_change <= -10:
-
-            alerts.append({
-
-                "timestamp":
-                str(datetime.now()),
-
-                "type":
-                "TREND_DECLINE",
-
-                "trend":
-                trend_name,
-
-                "severity":
-                "MEDIUM",
-
-                "message":
-
-                f"{trend_name} momentum "
-
-                f"dropped "
-
-                f"{abs(momentum_change)}% "
-
-                f"in the latest "
-
-                f"monitoring cycle.",
-
-                "confidence":
-                confidence
-            })
-
-        # ===================================
-        # LOW CONFIDENCE WARNING
-        # ===================================
-
-        if confidence <= 0.5:
-
-            alerts.append({
-
-                "timestamp":
-                str(datetime.now()),
-
-                "type":
-                "LOW_CONFIDENCE",
-
-                "trend":
-                trend_name,
-
-                "severity":
-                "LOW",
-
-                "message":
-
-                f"{trend_name} confidence "
-
-                f"fell below stability "
-
-                f"threshold.",
-
-                "confidence":
-                confidence
-            })
+        print("No trend anomalies detected.")
 
     return alerts
