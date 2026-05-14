@@ -1,9 +1,7 @@
 import pandas as pd
 
 from sklearn.ensemble import RandomForestRegressor
-
 from sklearn.model_selection import train_test_split
-
 from sklearn.metrics import mean_absolute_error
 
 from backend.services.data_engine import (
@@ -28,21 +26,28 @@ class DemandForecastingEngine:
 
     def load_training_data(self):
 
-        trend_df = data_engine.load_trend_data()
-
         inventory_df = data_engine.load_inventory_data()
 
-        # Merge datasets
+        # Use inventory dataset as foundation
+        df = inventory_df.copy()
 
-        merged_df = pd.merge(
-            trend_df,
-            inventory_df,
-            left_on="category",
-            right_on="category",
-            how="inner"
+        # Synthetic trend scores by category
+        trend_scores = {
+            "tops": 75,
+            "outerwear": 82,
+            "blazers": 88,
+            "pants": 65,
+            "knitwear": 70,
+            "bottoms": 68
+        }
+
+        df["trend_score"] = (
+            df["category"]
+            .map(trend_scores)
+            .fillna(70)
         )
 
-        self.df = merged_df
+        self.df = df
 
         print("FORECAST TRAINING DATA LOADED")
 
@@ -52,8 +57,23 @@ class DemandForecastingEngine:
 
         df = self.df.copy()
 
-        # Simulated future demand target
+        # Sales velocity multipliers
+        velocity_multiplier = {
+            "low": 0.3,
+            "medium": 0.6,
+            "high": 1.0
+        }
 
+        # Create synthetic units sold
+        df["units_sold"] = (
+            df["stock"] *
+            df["sales_velocity"]
+            .str.lower()
+            .map(velocity_multiplier)
+            .fillna(0.5)
+        )
+
+        # Create future demand target
         df["future_demand"] = (
             (
                 df["trend_score"] *
@@ -62,7 +82,6 @@ class DemandForecastingEngine:
         )
 
         # Encode sales velocity
-
         velocity_map = {
             "low": 1,
             "medium": 2,
@@ -75,12 +94,12 @@ class DemandForecastingEngine:
             .map(velocity_map)
         )
 
+        # FINAL FEATURE ORDER
         self.feature_columns = [
             "trend_score",
             "units_sold",
-            "price",
-            "stock",
             "unit_price",
+            "stock",
             "sales_velocity_encoded"
         ]
 
@@ -96,13 +115,11 @@ class DemandForecastingEngine:
 
         y = self.df[self.target_column]
 
-        X_train, X_test, y_train, y_test = (
-            train_test_split(
-                X,
-                y,
-                test_size=0.2,
-                random_state=42
-            )
+        X_train, X_test, y_train, y_test = train_test_split(
+            X,
+            y,
+            test_size=0.2,
+            random_state=42
         )
 
         self.model.fit(X_train, y_train)
@@ -114,7 +131,7 @@ class DemandForecastingEngine:
             predictions
         )
 
-        print(f"MODEL TRAINED")
+        print("MODEL TRAINED")
         print(f"Mean Absolute Error: {mae:.2f}")
 
         return mae
@@ -125,6 +142,11 @@ class DemandForecastingEngine:
     ):
 
         input_df = pd.DataFrame([input_data])
+
+        # FORCE SAME FEATURE ORDER
+        input_df = input_df[
+            self.feature_columns
+        ]
 
         prediction = self.model.predict(
             input_df
@@ -157,9 +179,8 @@ if __name__ == "__main__":
             {
                 "trend_score": 92,
                 "units_sold": 1400,
-                "price": 45,
-                "stock": 18,
                 "unit_price": 45,
+                "stock": 18,
                 "sales_velocity_encoded": 3
             }
         )
